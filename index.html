@@ -247,15 +247,15 @@ const FIREBASE_CONFIG = {
 };"
 };
 // Tên document lưu sơ đồ trên Firestore (có thể đổi nếu muốn tách nhiều sơ đồ khác nhau)
-const DOC_PATH = { collection: 'orgcharts', doc: 'main' };
-
-let firebaseReady = false;
-let db = null;
-let docRef = null;
-try {
-  if (typeof firebase === 'undefined') throw new Error('SDK Firebase chưa tải được (kiểm tra kết nối mạng / domain gstatic.com có bị chặn không).');
-  firebase.initializeApp(FIREBASE_CONFIG);
-  db = firebase.firestore();
+cconst EDIT_PASSWORD_HASH = "0c3d5517d7fe7feafefb2e59f5e1a9820cf2163afc655a74af95ee94e7e0f5...";
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAakaR1xeMoXot21XtPzmJgXis8wledE4s",
+  authDomain: "an-g-17edb.firebaseapp.com",
+  projectId: "an-g-17edb",
+  storageBucket: "an-g-17edb.firebasestorage.app",
+  messagingSenderId: "646456987387",
+  appId: "1:646456987387:web:72085269a9f3422404ea5e"
+};
   docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
   firebaseReady = true;
 } catch (err) {
