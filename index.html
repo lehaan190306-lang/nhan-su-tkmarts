@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sơ đồ phân cấp nhân sự</title>
+<style>
+  :root {
+    --bg-page: #f6f5f2;
+    --surface: #ffffff;
+    --border: #e3e1d9;
+    --border-strong: #c9c6ba;
+    --text-primary: #1f1f1d;
+    --text-secondary: #5f5e5a;
+    --text-muted: #8b8980;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 1300px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 20px; }
+  .toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .toolbar button {
+    height: 34px; padding: 0 14px; font-size: 13px; border-radius: 8px;
+    border: 1px solid var(--border-strong); background: var(--surface);
+    color: var(--text-primary); cursor: pointer;
+  }
+  .toolbar button:hover { background: #f0efe9; }
+  .toolbar button.danger { color: #a32d2d; border-color: #e0b9b9; }
+  .zoom-group {
+    display: flex; align-items: center; gap: 4px; border: 1px solid var(--border-strong);
+    border-radius: 8px; padding: 2px; background: var(--surface); margin-left: auto;
+  }
+  .zoom-group button {
+    height: 30px; width: 30px; border: none; background: transparent; border-radius: 6px;
+    cursor: pointer; font-size: 15px; color: var(--text-primary); padding: 0;
+  }
+  .zoom-group button:hover { background: #f0efe9; }
+  .zoom-label { font-size: 12px; color: var(--text-secondary); width: 46px; text-align: center; }
+
+  .viewport {
+    overflow: auto; border: 1px solid var(--border); border-radius: 14px;
+    background: var(--surface); max-height: 78vh; padding: 28px;
+  }
+
+  .tier-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px; gap: 10px; }
+  .tier-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; white-space: nowrap; }
+  .tier-bar { width: 5px; height: 18px; border-radius: 3px; display: inline-block; }
+  .tier-add {
+    height: 30px; padding: 0 12px; font-size: 12px; border-radius: 8px;
+    border: 1px solid var(--border-strong); background: var(--surface); cursor: pointer; white-space: nowrap;
+  }
+  .tier-add:hover { background: #f0efe9; }
+
+  .tier-col { display: flex; flex-direction: column; flex-shrink: 0; align-self: stretch; }
+  .row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 6px 4px 16px; flex: 1; }
+
+  .card {
+    border-radius: 14px; border: 1px solid var(--border); padding: 12px; width: 140px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative;
+    background: var(--surface); flex-shrink: 0;
+  }
+  .card .remove {
+    position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border: none;
+    background: transparent; color: var(--text-muted); cursor: pointer; font-size: 15px;
+    line-height: 1; border-radius: 6px;
+  }
+  .card .remove:hover { background: rgba(0,0,0,0.06); color: #a32d2d; }
+  .avatar {
+    width: 52px; height: 52px; border-radius: 50%; background: #ffffff;
+    border: 2px dashed var(--border-strong); display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); overflow: hidden; cursor: pointer; flex-shrink: 0;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar svg { width: 24px; height: 24px; }
+  .name-input {
+    width: 100%; height: 30px; font-size: 13px; text-align: center; padding: 0 6px;
+    border-radius: 6px; border: 1px solid var(--border); background: #fff;
+  }
+  .name-input:focus { outline: 2px solid #185FA5; outline-offset: 1px; }
+  .role-label { font-size: 12px; font-weight: 800; color: var(--text-primary); text-align: center; }
+
+  .connector { position: relative; width: 44px; align-self: stretch; flex-shrink: 0; }
+  .static-line { height: 1px; width: 16px; background: var(--border-strong); margin: auto 0; flex-shrink: 0; }
+
+  .add-mini {
+    height: 24px; padding: 0 10px; font-size: 11px; border-radius: 7px;
+    border: 1px dashed var(--border-strong); background: transparent; color: var(--text-secondary);
+    cursor: pointer; margin-top: 4px; white-space: nowrap;
+  }
+  .add-mini:hover { background: rgba(0,0,0,0.03); }
+
+  #org-root { display: flex; flex-direction: row; align-items: stretch; }
+
+  .groups-container { display: flex; flex-direction: column; gap: 24px; padding: 6px 4px 16px; }
+  .group-block {
+    display: flex; flex-direction: column; gap: 10px;
+    border: 1px dashed var(--border-strong); border-radius: 16px; padding: 14px;
+    background: rgba(0,0,0,0.012); position: relative;
+  }
+  .group-body { display: flex; flex-direction: row; align-items: flex-start; }
+  .dept-input {
+    font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 8px;
+    border: 1px solid var(--border-strong); background: #fff; width: 240px;
+    max-width: 100%; color: var(--text-primary);
+  }
+  .dept-input:focus { outline: 2px solid #185FA5; outline-offset: 1px; }
+  .dept-input::placeholder { font-weight: 400; color: var(--text-muted); }
+  .group-remove {
+    position: absolute; top: -10px; right: -10px; width: 24px; height: 24px; border-radius: 50%;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted);
+    cursor: pointer; font-size: 13px; line-height: 1;
+  }
+  .group-remove:hover { color: #a32d2d; border-color: #e0b9b9; }
+
+  .group-col { display: flex; flex-direction: column; align-items: center; }
+  .subgroups-col { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+  .subgroup-block { display: flex; flex-direction: row; align-items: flex-start; }
+  .subgroup-col { display: flex; flex-direction: column; align-items: center; }
+  .leaves-col { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+  .leaf-block { display: flex; flex-direction: row; align-items: center; }
+
+  .team-table {
+    display: flex; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    background: var(--surface);
+  }
+  .team-col {
+    display: flex; flex-direction: column; padding: 8px;
+    border-right: 1px solid var(--border);
+  }
+  .team-col-body { display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+  .team-col-chunk { display: flex; flex-direction: column; width: 150px; flex-shrink: 0; }
+  .team-col:last-child { border-right: none; }
+  .team-col-header {
+    font-size: 11px; font-weight: 600; text-align: center; padding-bottom: 6px;
+    margin-bottom: 6px; border-bottom: 1px solid var(--border); color: var(--text-secondary);
+  }
+  .team-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .avatar-sm {
+    width: 40px; height: 40px; border-radius: 50%; background: #ffffff;
+    border: 2px dashed var(--border-strong); display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); overflow: hidden; cursor: pointer; flex-shrink: 0;
+  }
+  .avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-sm svg { width: 20px; height: 20px; }
+  .team-row input {
+    flex: 1; height: 26px; font-size: 12px; padding: 0 6px; border-radius: 5px;
+    border: 1px solid var(--border); min-width: 0;
+  }
+  .team-row input:focus { outline: 2px solid #185FA5; outline-offset: 1px; }
+  .team-row button {
+    width: 20px; height: 20px; border: none; background: transparent; color: var(--text-muted);
+    cursor: pointer; font-size: 12px; border-radius: 5px; flex-shrink: 0;
+  }
+  .team-row button:hover { background: rgba(0,0,0,0.06); color: #a32d2d; }
+  .team-col .add-mini { width: 100%; margin-top: 2px; }
+
+  .status { font-size: 12px; color: var(--text-muted); text-align: right; margin-top: 12px; min-height: 16px; }
+  input[type="file"] { display: none; }
+
+  .lock-badge {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 0 12px; height: 34px;
+    border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); white-space: nowrap;
+  }
+  .lock-badge.is-edit { color: #0F6E56; border-color: #b7ddd0; background: #f1faf6; }
+  .lock-badge.is-view { color: var(--text-secondary); }
+  #btn-toggle-edit { font-weight: 600; }
+  #btn-toggle-edit.is-edit { color: #a32d2d; border-color: #e0b9b9; }
+
+  /* Chế độ chỉ xem: làm mờ và khóa mọi thao tác chỉnh sửa */
+  body.view-mode .card .remove,
+  body.view-mode .group-remove,
+  body.view-mode .tier-add,
+  body.view-mode .add-mini,
+  body.view-mode .team-row button,
+  body.view-mode #btn-reset,
+  body.view-mode #btn-import {
+    opacity: 0.35; pointer-events: none; cursor: not-allowed;
+  }
+  body.view-mode .avatar,
+  body.view-mode .avatar-sm {
+    cursor: default; pointer-events: none;
+  }
+  body.view-mode input:not(#file-input) {
+    background: #fafaf8; color: var(--text-secondary); cursor: default;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sơ đồ phân cấp nhân sự</h1>
+  <p class="sub">Sơ đồ phân nhánh theo chiều ngang: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây — ai có link đều xem được, chỉ người có mật khẩu mới chỉnh sửa được.</p>
+
+  <div class="toolbar">
+    <span class="lock-badge is-view" id="lock-badge">🔒 Đang xem</span>
+    <button id="btn-toggle-edit">🔓 Mở khóa chỉnh sửa</button>
+    <button id="btn-download-image">Tải ảnh về máy (.png)</button>
+    <button id="btn-export">Xuất file (.json)</button>
+    <button id="btn-import">Nhập file (.json)</button>
+    <button id="btn-reset" class="danger">Xóa hết, làm lại</button>
+    <input type="file" id="file-input" accept=".json">
+    <span id="img-progress" style="font-size:12px;color:var(--text-muted);"></span>
+    <div class="zoom-group">
+      <button id="zoom-out" aria-label="Thu nhỏ">−</button>
+      <span class="zoom-label" id="zoom-label">100%</span>
+      <button id="zoom-in" aria-label="Phóng to">+</button>
+      <button id="zoom-reset" aria-label="Đặt lại 100%" style="width:auto;padding:0 8px;font-size:11px;">100%</button>
+    </div>
+  </div>
+
+  <div class="viewport">
+    <div id="org-root"></div>
+  </div>
+  <div class="status" id="status"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ============================================================
+   CẤU HÌNH FIREBASE — điền thông tin dự án Firebase của bạn vào đây.
+   Xem hướng dẫn lấy các giá trị này trong phần chat kèm theo file này.
+   ============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "DÁN_API_KEY_VÀO_ĐÂY",
+  authDomain: "DÁN_AUTH_DOMAIN_VÀO_ĐÂY",
+  projectId: "DÁN_PROJECT_ID_VÀO_ĐÂY",
+  storageBucket: "DÁN_STORAGE_BUCKET_VÀO_ĐÂY",
+  messagingSenderId: "DÁN_SENDER_ID_VÀO_ĐÂY",
+  appId: "DÁN_APP_ID_VÀO_ĐÂY"
+};
+// Tên document lưu sơ đồ trên Firestore (có thể đổi nếu muốn tách nhiều sơ đồ khác nhau)
+const DOC_PATH = { collection: 'orgcharts', doc: 'main' };
+
+let firebaseReady = false;
+let db = null;
+let docRef = null;
+try {
+  if (typeof firebase === 'undefined') throw new Error('SDK Firebase chưa tải được (kiểm tra kết nối mạng / domain gstatic.com có bị chặn không).');
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+  docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
+  firebaseReady = true;
+} catch (err) {
+  console.error('Không khởi tạo được Firebase:', err);
+}
+
+const T1 = { id: 't1', title: 'Chủ tịch', accent: '#534AB7' };
+const T2 = { id: 't2', title: 'Giám đốc', accent: '#185FA5' };
+const T2B = { id: 't2b', title: 'Phó Giám đốc', accent: '#2E8B8B' };
+const T3 = { id: 't3', title: 'Tổng quản lý', accent: '#0F6E56' };
+const T4 = { id: 't4', title: 'Quản lý trung cấp', accent: '#0F6E56' };
+const TEAM_COLS = [
+  { key: 't6', title: 'Phó quản lý' },
+  { key: 't7', title: 'Nhân viên' }
+];
+const FLAT_TIERS_TOP = [T1, T2, T2B, T3];
+
+const STORAGE_KEY = 'org-chart-data-v6-cache'; // chỉ dùng làm bộ nhớ đệm hiển thị tạm thời khi đang tải từ đám mây
+let state = null;
+let pendingAvatarTarget = null;
+let zoomLevel = 1;
+
+// ---- Phân quyền chỉnh sửa bằng mật khẩu ----
+let editMode = false;
+let editKeyHash = null; // hash SHA-256 của mật khẩu, chỉ có khi đã mở khóa thành công
+let applyingRemoteUpdate = false; // tránh render đè lên trong lúc đang gõ khi có cập nhật từ người khác
+let saveTimer = null;
+
+async function sha256Hex(text) {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function updateLockUI() {
+  const badge = document.getElementById('lock-badge');
+  const btn = document.getElementById('btn-toggle-edit');
+  document.body.classList.toggle('view-mode', !editMode);
+  if (editMode) {
+    badge.textContent = '🔓 Đang chỉnh sửa';
+    badge.className = 'lock-badge is-edit';
+    btn.textContent = '🔒 Khóa lại';
+    btn.classList.add('is-edit');
+  } else {
+    badge.textContent = '🔒 Đang xem';
+    badge.className = 'lock-badge is-view';
+    btn.textContent = '🔓 Mở khóa chỉnh sửa';
+    btn.classList.remove('is-edit');
+  }
+}
+
+// Bọc quanh các hành động chỉnh sửa: nếu chưa mở khóa thì chặn lại và nhắc nhập mật khẩu
+function guardEdit(fn) {
+  return function (...args) {
+    if (!editMode) {
+      alert('Sơ đồ đang ở chế độ chỉ xem. Bấm "Mở khóa chỉnh sửa" và nhập mật khẩu để sửa.');
+      return;
+    }
+    return fn.apply(this, args);
+  };
+}
+
+document.getElementById('btn-toggle-edit').onclick = async () => {
+  if (editMode) {
+    editMode = false;
+    editKeyHash = null;
+    updateLockUI();
+    return;
+  }
+  const pass = prompt('Nhập mật khẩu chỉnh sửa:');
+  if (pass === null || pass === '') return;
+
+  if (!firebaseReady) {
+    // Không có đám mây: cho sửa tạm trên máy này (giống bản lưu cục bộ cũ), không cần khớp mật khẩu với server
+    editMode = true;
+    updateLockUI();
+    setStatus('⚠️ Không có kết nối đám mây — đang sửa tạm trên máy này, chưa đồng bộ cho người khác.');
+    return;
+  }
+
+  const hash = await sha256Hex(pass);
+  // Thử ghi thử để Firestore Rules xác nhận mật khẩu đúng hay sai
+  try {
+    await docRef.set({ state, editKeyHash: hash, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    editKeyHash = hash;
+    editMode = true;
+    updateLockUI();
+    setStatus('Mật khẩu đúng — đã mở khóa chỉnh sửa.');
+  } catch (err) {
+    alert('Sai mật khẩu, hoặc chưa cấu hình Firestore Rules đúng cách.');
+  }
+};
+
+function emptyPerson() { return { name: '', photo: null }; }
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const bigint = parseInt(full, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+}
+function emptyTeam() {
+  return { t6: [emptyPerson()], t7: [emptyPerson()] };
+}
+function emptyTrungCap() { return { ...emptyPerson(), team: emptyTeam(), dept: '' }; }
+
+function defaultState() {
+  return {
+    t1: [emptyPerson()],
+    t2: [emptyPerson()],
+    t2b: [emptyPerson()],
+    t3: [emptyPerson()],
+    t4: [ emptyTrungCap() ]
+  };
+}
+
+function setStatus(msg) { document.getElementById('status').textContent = msg; }
+
+function loadState() {
+  // Hiển thị tạm bằng bản nhớ đệm cục bộ (nếu có) trong lúc chờ tải từ đám mây, cho cảm giác mượt hơn
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { state = JSON.parse(raw); render(); }
+  } catch (err) { /* bỏ qua, sẽ chờ dữ liệu từ đám mây */ }
+
+  if (!state) { state = defaultState(); render(); }
+
+  if (!firebaseReady) {
+    setStatus('⚠️ Chưa kết nối được đám mây — đang chạy chế độ lưu tạm trên máy này. Xem console (F12) để biết chi tiết lỗi.');
+    return;
+  }
+
+  setStatus('Đang kết nối đám mây...');
+
+  // Lắng nghe realtime: mọi thay đổi (kể cả từ người khác) sẽ tự cập nhật lên đây
+  docRef.onSnapshot((snap) => {
+    if (snap.metadata.hasPendingWrites) return; // bỏ qua tiếng vọng của chính lần ghi của mình
+    if (!snap.exists) {
+      // Chưa có dữ liệu trên đám mây -> khởi tạo bằng dữ liệu mặc định
+      docRef.set({ state: defaultState(), editKeyHash: null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      return;
+    }
+    const data = snap.data();
+    state = data.state || defaultState();
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+    render();
+    setStatus('Đã đồng bộ với đám mây · ' + new Date().toLocaleTimeString('vi-VN'));
+  }, (err) => {
+    setStatus('Không kết nối được đám mây: ' + err.message);
+  });
+}
+
+function saveState() {
+  if (!editMode) return; // người chỉ xem không được ghi lên đám mây
+
+  if (!firebaseReady) {
+    // Chế độ dự phòng: chỉ lưu trên máy này, giống bản gốc chưa nối đám mây
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      setStatus('⚠️ Đã lưu tạm trên máy này (chưa có đám mây để đồng bộ cho người khác).');
+    } catch (err) {
+      setStatus('Không lưu được: ' + err.message);
+    }
+    return;
+  }
+
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try {
+      await docRef.set({ state, editKeyHash, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      setStatus('Đã lưu lên đám mây · ' + new Date().toLocaleTimeString('vi-VN'));
+    } catch (err) {
+      setStatus('Không lưu được lên đám mây: ' + err.message);
+    }
+  }, 300);
+}
+
+function userIcon() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>';
+}
+
+function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'remove';
+  removeBtn.setAttribute('aria-label', 'Xóa vị trí này');
+  removeBtn.textContent = '✕';
+  removeBtn.onclick = onRemove;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.title = 'Bấm để chọn ảnh';
+  avatar.innerHTML = person.photo ? '<img src="' + person.photo + '" alt="Ảnh đại diện">' : userIcon();
+  avatar.onclick = onPhoto;
+  if (accentColor) {
+    avatar.style.borderStyle = 'solid';
+    avatar.style.borderColor = accentColor;
+    avatar.style.color = accentColor;
+    avatar.style.background = hexToRgba(accentColor, 0.12);
+  }
+
+  const nameInput = document.createElement('input');
+  nameInput.className = 'name-input';
+  nameInput.type = 'text';
+  nameInput.placeholder = 'Nhập tên';
+  nameInput.value = person.name;
+  nameInput.oninput = (e) => { person.name = e.target.value; };
+  nameInput.onblur = () => saveState();
+
+  const roleLabel = document.createElement('div');
+  roleLabel.className = 'role-label';
+  roleLabel.textContent = tierTitle;
+
+  card.appendChild(removeBtn);
+  card.appendChild(avatar);
+  card.appendChild(nameInput);
+  card.appendChild(roleLabel);
+  return card;
+}
+
+function bindAvatarClick(person) {
+  return () => {
+    pendingAvatarTarget = person;
+    document.getElementById('file-input-avatar-trigger').click();
+  };
+}
+
+function render() {
+  const root = document.getElementById('org-root');
+  root.innerHTML = '';
+
+  FLAT_TIERS_TOP.forEach((tier) => {
+    root.appendChild(buildFlatTierColumn(tier, state[tier.id]));
+    root.appendChild(buildConnectorPlaceholder('connector-' + tier.id));
+  });
+
+  const t4Col = document.createElement('div');
+  t4Col.className = 'tier-col';
+
+  const t4Header = document.createElement('div');
+  t4Header.className = 'tier-header';
+  t4Header.innerHTML =
+    '<div class="tier-title"><span class="tier-bar" style="background:' + T4.accent + '"></span><span>' + T4.title + '</span></div>' +
+    '<button class="tier-add" id="add-t4">+ Thêm</button>';
+  t4Col.appendChild(t4Header);
+
+  const groupsContainer = document.createElement('div');
+  groupsContainer.className = 'groups-container';
+  groupsContainer.id = 'row-t4';
+
+  state.t4.forEach((manager, i) => {
+    groupsContainer.appendChild(buildTrungCapGroup(manager, i));
+  });
+
+  t4Col.appendChild(groupsContainer);
+  root.appendChild(t4Col);
+
+  document.getElementById('add-t4').onclick = () => {
+    state.t4.push(emptyTrungCap());
+    render();
+    saveState();
+  };
+
+  applyZoom();
+  drawAllConnectors();
+  lockFieldsIfNeeded();
+  updateLockUI();
+}
+
+// Khóa/mở toàn bộ input và nút bên trong sơ đồ theo trạng thái editMode
+function lockFieldsIfNeeded() {
+  const root = document.getElementById('org-root');
+  root.querySelectorAll('input').forEach((el) => { el.disabled = !editMode; });
+  root.querySelectorAll('button').forEach((el) => { el.disabled = !editMode; });
+}
+
+function buildFlatTierColumn(tier, list) {
+  const col = document.createElement('div');
+  col.className = 'tier-col';
+
+  const header = document.createElement('div');
+  header.className = 'tier-header';
+  header.innerHTML =
+    '<div class="tier-title"><span class="tier-bar" style="background:' + tier.accent + '"></span><span>' + tier.title + '</span></div>' +
+    '<button class="tier-add" data-add-flat="' + tier.id + '">+ Thêm</button>';
+  col.appendChild(header);
+
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.id = 'row-' + tier.id;
+
+  list.forEach((person, pIdx) => {
+    const card = createCard(
+      person,
+      tier.title,
+      () => {
+        state[tier.id].splice(pIdx, 1);
+        if (state[tier.id].length === 0) state[tier.id].push(emptyPerson());
+        render();
+        saveState();
+      },
+      bindAvatarClick(person),
+      tier.accent
+    );
+    row.appendChild(card);
+  });
+
+  col.appendChild(row);
+
+  col.querySelector('[data-add-flat]').onclick = () => {
+    state[tier.id].push(emptyPerson());
+    render();
+    saveState();
+  };
+
+  return col;
+}
+
+function buildConnectorPlaceholder(id) {
+  const div = document.createElement('div');
+  div.className = 'connector';
+  div.id = id;
+  return div;
+}
+
+function buildTrungCapGroup(manager, i) {
+  const block = document.createElement('div');
+  block.className = 'group-block';
+
+  const removeGroupBtn = document.createElement('button');
+  removeGroupBtn.className = 'group-remove';
+  removeGroupBtn.setAttribute('aria-label', 'Xóa quản lý trung cấp này');
+  removeGroupBtn.textContent = '✕';
+  removeGroupBtn.onclick = () => {
+    state.t4.splice(i, 1);
+    if (state.t4.length === 0) state.t4.push(emptyTrungCap());
+    render();
+    saveState();
+  };
+  block.appendChild(removeGroupBtn);
+  block.style.background = hexToRgba(T4.accent, 0.06);
+  block.style.borderColor = hexToRgba(T4.accent, 0.4);
+  block.style.borderStyle = 'solid';
+
+  const deptInput = document.createElement('input');
+  deptInput.className = 'dept-input';
+  deptInput.type = 'text';
+  deptInput.placeholder = 'Tên bộ phận (VD: Kinh doanh, Kỹ thuật...)';
+  deptInput.value = manager.dept || '';
+  deptInput.oninput = (e) => { manager.dept = e.target.value; };
+  deptInput.onblur = () => saveState();
+  block.appendChild(deptInput);
+
+  const body = document.createElement('div');
+  body.className = 'group-body';
+
+  const groupCol = document.createElement('div');
+  groupCol.className = 'group-col';
+
+  const card = createCard(manager, T4.title, () => {
+    state.t4.splice(i, 1);
+    if (state.t4.length === 0) state.t4.push(emptyTrungCap());
+    render();
+    saveState();
+  }, bindAvatarClick(manager), T4.accent);
+  card.id = 'card-t4-' + i;
+  groupCol.appendChild(card);
+  body.appendChild(groupCol);
+
+  const line = document.createElement('div');
+  line.className = 'static-line';
+  body.appendChild(line);
+
+  manager.team = manager.team || emptyTeam();
+  body.appendChild(buildTeamTable(manager.team));
+
+  block.appendChild(body);
+
+  return block;
+}
+
+function buildTeamRow(team, col, person, idx) {
+  const rowDiv = document.createElement('div');
+  rowDiv.className = 'team-row';
+
+  const avatarSm = document.createElement('div');
+  avatarSm.className = 'avatar-sm';
+  avatarSm.title = 'Bấm để chọn ảnh';
+  avatarSm.innerHTML = person.photo ? '<img src="' + person.photo + '" alt="Ảnh đại diện">' : userIcon();
+  avatarSm.onclick = bindAvatarClick(person);
+  avatarSm.style.borderStyle = 'solid';
+  avatarSm.style.borderColor = T4.accent;
+  avatarSm.style.color = T4.accent;
+  avatarSm.style.background = hexToRgba(T4.accent, 0.12);
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'Tên';
+  input.value = person.name;
+  input.oninput = (e) => { person.name = e.target.value; };
+  input.onblur = () => saveState();
+
+  const removeBtn = document.createElement('button');
+  removeBtn.setAttribute('aria-label', 'Xóa');
+  removeBtn.textContent = '✕';
+  removeBtn.onclick = () => {
+    team[col.key].splice(idx, 1);
+    if (team[col.key].length === 0) team[col.key].push(emptyPerson());
+    render();
+    saveState();
+  };
+
+  rowDiv.appendChild(avatarSm);
+  rowDiv.appendChild(input);
+  rowDiv.appendChild(removeBtn);
+  return rowDiv;
+}
+
+function buildTeamAddButton(team, col) {
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-mini';
+  addBtn.textContent = '+';
+  addBtn.onclick = () => {
+    team[col.key].push(emptyPerson());
+    render();
+    saveState();
+  };
+  return addBtn;
+}
+
+const TEAM_CHUNK_SIZE = 5;
+
+function buildTeamTable(team) {
+  const table = document.createElement('div');
+  table.className = 'team-table';
+
+  TEAM_COLS.forEach(col => {
+    team[col.key] = team[col.key] || [];
+    const list = team[col.key];
+
+    const colDiv = document.createElement('div');
+    colDiv.className = 'team-col';
+
+    const header = document.createElement('div');
+    header.className = 'team-col-header';
+    header.textContent = col.title;
+    header.style.color = T4.accent;
+    colDiv.appendChild(header);
+
+    const body = document.createElement('div');
+    body.className = 'team-col-body';
+
+    const numChunks = Math.max(1, Math.ceil(list.length / TEAM_CHUNK_SIZE));
+    for (let c = 0; c < numChunks; c++) {
+      const start = c * TEAM_CHUNK_SIZE;
+      const chunkItems = list.slice(start, start + TEAM_CHUNK_SIZE);
+      const chunkDiv = document.createElement('div');
+      chunkDiv.className = 'team-col-chunk';
+
+      chunkItems.forEach((person, k) => {
+        chunkDiv.appendChild(buildTeamRow(team, col, person, start + k));
+      });
+
+      // Chỉ đặt nút "+" vào cột con này nếu nó chưa đủ 5 người (còn chỗ trống)
+      if (c === numChunks - 1 && chunkItems.length < TEAM_CHUNK_SIZE) {
+        chunkDiv.appendChild(buildTeamAddButton(team, col));
+      }
+
+      body.appendChild(chunkDiv);
+    }
+
+    // Nếu cột con cuối đã đủ 5 người, nhảy hẳn sang một cột con mới chỉ để chứa nút "+"
+    if (list.length > 0 && list.length % TEAM_CHUNK_SIZE === 0) {
+      const chunkDiv = document.createElement('div');
+      chunkDiv.className = 'team-col-chunk';
+      chunkDiv.appendChild(buildTeamAddButton(team, col));
+      body.appendChild(chunkDiv);
+    }
+
+    colDiv.appendChild(body);
+    table.appendChild(colDiv);
+  });
+
+  return table;
+}
+
+function drawBranchFromEl(connectorEl, parentEl, childEls) {
+  if (!connectorEl || !parentEl || childEls.length === 0) return;
+  const connectorRect = connectorEl.getBoundingClientRect();
+  const width = Math.max(connectorRect.width, 1) / zoomLevel;
+  const height = Math.max(connectorRect.height, 1) / zoomLevel;
+  const midX = width / 2;
+
+  const parentRect = parentEl.getBoundingClientRect();
+  const parentCenterY = (parentRect.top + parentRect.height / 2 - connectorRect.top) / zoomLevel;
+
+  const childPoints = childEls.map(el => {
+    const r = el.getBoundingClientRect();
+    return (r.top + r.height / 2 - connectorRect.top) / zoomLevel;
+  });
+
+  const stroke = '#c9c6ba';
+  let svg = '<svg width="' + width + '" height="' + height + '" style="position:absolute;top:0;left:0;overflow:visible;">';
+  svg += '<line x1="0" y1="' + parentCenterY + '" x2="' + midX + '" y2="' + parentCenterY + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+
+  const allY = childPoints.concat([parentCenterY]);
+  const minY = Math.min(...allY);
+  const maxY = Math.max(...allY);
+  if (maxY > minY) {
+    svg += '<line x1="' + midX + '" y1="' + minY + '" x2="' + midX + '" y2="' + maxY + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+  }
+  childPoints.forEach(y => {
+    svg += '<line x1="' + midX + '" y1="' + y + '" x2="' + width + '" y2="' + y + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+    svg += '<circle cx="' + width + '" cy="' + y + '" r="2.5" fill="' + stroke + '"/>';
+  });
+  svg += '</svg>';
+  connectorEl.innerHTML = svg;
+}
+
+function drawAllConnectors() {
+  drawBranchFromEl(
+    document.getElementById('connector-t1'),
+    document.getElementById('row-t1'),
+    Array.from(document.getElementById('row-t2').querySelectorAll('.card'))
+  );
+  drawBranchFromEl(
+    document.getElementById('connector-t2'),
+    document.getElementById('row-t2'),
+    Array.from(document.getElementById('row-t2b').querySelectorAll('.card'))
+  );
+  drawBranchFromEl(
+    document.getElementById('connector-t2b'),
+    document.getElementById('row-t2b'),
+    Array.from(document.getElementById('row-t3').querySelectorAll('.card'))
+  );
+  drawBranchFromEl(
+    document.getElementById('connector-t3'),
+    document.getElementById('row-t3'),
+    Array.from(document.getElementById('row-t4').querySelectorAll('.card'))
+  );
+}
+
+function applyZoom() {
+  const root = document.getElementById('org-root');
+  root.style.transformOrigin = 'top left';
+  root.style.transform = 'scale(' + zoomLevel + ')';
+  document.getElementById('zoom-label').textContent = Math.round(zoomLevel * 100) + '%';
+}
+
+document.getElementById('zoom-in').onclick = () => {
+  zoomLevel = Math.min(2, Math.round((zoomLevel + 0.1) * 10) / 10);
+  applyZoom();
+  drawAllConnectors();
+};
+document.getElementById('zoom-out').onclick = () => {
+  zoomLevel = Math.max(0.4, Math.round((zoomLevel - 0.1) * 10) / 10);
+  applyZoom();
+  drawAllConnectors();
+};
+document.getElementById('zoom-reset').onclick = () => {
+  zoomLevel = 1;
+  applyZoom();
+  drawAllConnectors();
+};
+
+const avatarFileInput = document.createElement('input');
+avatarFileInput.type = 'file';
+avatarFileInput.accept = 'image/*';
+avatarFileInput.id = 'file-input-avatar-trigger';
+avatarFileInput.onchange = (e) => {
+  if (!editMode) { e.target.value = ''; return; }
+  const file = e.target.files[0];
+  if (!file || !pendingAvatarTarget) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingAvatarTarget.photo = reader.result;
+    render();
+    saveState();
+  };
+  reader.readAsDataURL(file);
+  avatarFileInput.value = '';
+};
+document.body.appendChild(avatarFileInput);
+
+document.getElementById('btn-reset').onclick = guardEdit(() => {
+  if (confirm('Xóa hết dữ liệu sơ đồ hiện tại?')) {
+    state = defaultState();
+    render();
+    saveState();
+  }
+});
+
+document.getElementById('btn-download-image').onclick = async () => {
+  const btn = document.getElementById('btn-download-image');
+  const progress = document.getElementById('img-progress');
+  btn.disabled = true;
+  progress.textContent = 'Đang tạo ảnh...';
+
+  const liveRoot = document.getElementById('org-root');
+  const clone = liveRoot.cloneNode(true);
+
+  // cloneNode không giữ nội dung đang gõ trong các ô input, phải chép tay
+  const liveInputs = liveRoot.querySelectorAll('input');
+  const cloneInputs = clone.querySelectorAll('input');
+  liveInputs.forEach((el, i) => {
+    if (cloneInputs[i]) cloneInputs[i].setAttribute('value', el.value);
+  });
+
+  // Bỏ hiệu ứng thu phóng trên bản sao để ảnh luôn xuất ở kích thước gốc 100%
+  // (không đụng tới zoom của trang đang xem, nên trang chính không bị nháy zoom)
+  clone.style.transform = 'none';
+
+  const holder = document.createElement('div');
+  holder.style.position = 'fixed';
+  holder.style.top = '0';
+  holder.style.left = '-99999px';
+  holder.style.background = '#ffffff';
+  holder.style.padding = '28px';
+  holder.appendChild(clone);
+  document.body.appendChild(holder);
+
+  // Chờ trình duyệt dựng xong bố cục của bản sao trước khi chụp
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+  try {
+    const canvas = await html2canvas(holder, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = 'so-do-phan-cap.png';
+    a.click();
+    progress.textContent = 'Đã tải ảnh về máy.';
+  } catch (err) {
+    progress.textContent = 'Không tải được ảnh: ' + err.message;
+  } finally {
+    document.body.removeChild(holder);
+    btn.disabled = false;
+    setTimeout(() => { progress.textContent = ''; }, 4000);
+  }
+};
+
+document.getElementById('btn-export').onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'so-do-phan-cap.json';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById('btn-import').onclick = guardEdit(() => {
+  document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').onchange = (e) => {
+  if (!editMode) { e.target.value = ''; return; }
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      state = JSON.parse(reader.result);
+      render();
+      saveState();
+    } catch (err) {
+      alert('File không hợp lệ.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+};
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(drawAllConnectors, 100);
+});
+
+loadState();
+</script>
+</body>
+</html>
