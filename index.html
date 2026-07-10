@@ -303,6 +303,7 @@ function updateLockUI() {
     btn.textContent = '🔓 Mở khóa chỉnh sửa';
     btn.classList.remove('is-edit');
   }
+  lockFieldsIfNeeded(); // bật/tắt lại toàn bộ ô nhập liệu và nút theo trạng thái mới nhất
 }
 
 // Bọc quanh các hành động chỉnh sửa: nếu chưa mở khóa thì chặn lại và nhắc nhập mật khẩu
