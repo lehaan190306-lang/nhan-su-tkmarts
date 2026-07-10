@@ -227,7 +227,16 @@
 /* ============================================================
    CẤU HÌNH FIREBASE — điền thông tin dự án Firebase của bạn vào đây.
    Xem hướng dẫn lấy các giá trị này trong phần chat kèm theo file này.
+
+   MẬT KHẨU CHỈNH SỬA — kiểm tra ngay trong file này (không cần đụng
+   tới Firestore Rules mỗi khi đổi mật khẩu). Muốn đổi mật khẩu:
+     1) Vào link sơ đồ → F12 → tab Console → dán:
+        crypto.subtle.digest('SHA-256', new TextEncoder().encode("mật_khẩu_mới")).then(b=>console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
+     2) Copy chuỗi hash in ra, thay vào EDIT_PASSWORD_HASH bên dưới.
+     3) Sửa trực tiếp trên GitHub (nút bút chì ✏️ ở file index.html) → Commit.
+   Mật khẩu hiện tại: 0107
    ============================================================ */
+const EDIT_PASSWORD_HASH = "0c3d5517d7fe7feafefb2e59f5e1a9820cf2163afc655a74af95ee94e7e0f5a7";
 const FIREBASE_CONFIG = {
   apiKey: "DÁN_API_KEY_VÀO_ĐÂY",
   authDomain: "DÁN_AUTH_DOMAIN_VÀO_ĐÂY",
@@ -270,7 +279,6 @@ let zoomLevel = 1;
 
 // ---- Phân quyền chỉnh sửa bằng mật khẩu ----
 let editMode = false;
-let editKeyHash = null; // hash SHA-256 của mật khẩu, chỉ có khi đã mở khóa thành công
 let applyingRemoteUpdate = false; // tránh render đè lên trong lúc đang gõ khi có cập nhật từ người khác
 let saveTimer = null;
 
@@ -311,31 +319,24 @@ function guardEdit(fn) {
 document.getElementById('btn-toggle-edit').onclick = async () => {
   if (editMode) {
     editMode = false;
-    editKeyHash = null;
     updateLockUI();
     return;
   }
   const pass = prompt('Nhập mật khẩu chỉnh sửa:');
   if (pass === null || pass === '') return;
 
-  if (!firebaseReady) {
-    // Không có đám mây: cho sửa tạm trên máy này (giống bản lưu cục bộ cũ), không cần khớp mật khẩu với server
-    editMode = true;
-    updateLockUI();
-    setStatus('⚠️ Không có kết nối đám mây — đang sửa tạm trên máy này, chưa đồng bộ cho người khác.');
+  const hash = await sha256Hex(pass);
+  if (hash !== EDIT_PASSWORD_HASH) {
+    alert('Sai mật khẩu.');
     return;
   }
 
-  const hash = await sha256Hex(pass);
-  // Thử ghi thử để Firestore Rules xác nhận mật khẩu đúng hay sai
-  try {
-    await docRef.set({ state, editKeyHash: hash, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-    editKeyHash = hash;
-    editMode = true;
-    updateLockUI();
+  editMode = true;
+  updateLockUI();
+  if (!firebaseReady) {
+    setStatus('⚠️ Đúng mật khẩu, nhưng không có kết nối đám mây — đang sửa tạm trên máy này.');
+  } else {
     setStatus('Mật khẩu đúng — đã mở khóa chỉnh sửa.');
-  } catch (err) {
-    alert('Sai mật khẩu, hoặc chưa cấu hình Firestore Rules đúng cách.');
   }
 };
 
@@ -387,7 +388,7 @@ function loadState() {
     if (snap.metadata.hasPendingWrites) return; // bỏ qua tiếng vọng của chính lần ghi của mình
     if (!snap.exists) {
       // Chưa có dữ liệu trên đám mây -> khởi tạo bằng dữ liệu mặc định
-      docRef.set({ state: defaultState(), editKeyHash: null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      docRef.set({ state: defaultState(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       return;
     }
     const data = snap.data();
@@ -417,7 +418,7 @@ function saveState() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try {
-      await docRef.set({ state, editKeyHash, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      await docRef.set({ state, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       setStatus('Đã lưu lên đám mây · ' + new Date().toLocaleTimeString('vi-VN'));
     } catch (err) {
