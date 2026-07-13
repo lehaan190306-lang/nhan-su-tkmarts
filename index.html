@@ -6,90 +6,141 @@
 <title>Sơ đồ phân cấp nhân sự</title>
 <style>
   :root {
-    --bg-page: #f6f5f2;
+    --bg-page: #eef1f6;
     --surface: #ffffff;
-    --border: #e3e1d9;
-    --border-strong: #c9c6ba;
-    --text-primary: #1f1f1d;
-    --text-secondary: #5f5e5a;
-    --text-muted: #8b8980;
+    --border: #e3e6ec;
+    --border-strong: #c7cdd9;
+    --text-primary: #171a21;
+    --text-secondary: #5b6270;
+    --text-muted: #8b93a3;
+    --brand: #185FA5;
+    --brand-soft: #eaf2fb;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.07), 0 1px 2px rgba(16, 24, 40, 0.04);
+    --shadow-md: 0 8px 20px rgba(16, 24, 40, 0.09), 0 2px 6px rgba(16, 24, 40, 0.05);
+    --shadow-lg: 0 20px 44px rgba(16, 24, 40, 0.14);
+    --ease-out: cubic-bezier(.22, 1, .36, 1);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--bg-page);
+    background:
+      radial-gradient(circle at 0% 0%, rgba(24, 95, 165, 0.05), transparent 45%),
+      radial-gradient(circle at 100% 0%, rgba(15, 110, 86, 0.05), transparent 45%),
+      var(--bg-page);
+    background-attachment: fixed;
     color: var(--text-primary);
     padding: 24px 16px 60px;
+    -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 1300px; margin: 0 auto; }
-  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
-  .sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 20px; }
-  .toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-  .toolbar button {
-    height: 34px; padding: 0 14px; font-size: 13px; border-radius: 8px;
-    border: 1px solid var(--border-strong); background: var(--surface);
-    color: var(--text-primary); cursor: pointer;
+  .org-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+  .company-logo { display: none; width: 44px; height: 44px; object-fit: contain; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-xs); }
+  h1 { font-size: 21px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .org-heading h1 { color: var(--text-primary); }
+  .sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 20px; line-height: 1.5; }
+  .toolbar {
+    display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: center;
+    background: rgba(255,255,255,0.6); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 8px; backdrop-filter: blur(6px);
   }
-  .toolbar button:hover { background: #f0efe9; }
+  .toolbar button {
+    height: 34px; padding: 0 14px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong); background: var(--surface);
+    color: var(--text-primary); cursor: pointer; box-shadow: var(--shadow-xs);
+    transition: transform .12s var(--ease-out), box-shadow .12s var(--ease-out), background .12s var(--ease-out), border-color .12s var(--ease-out);
+  }
+  .toolbar button:hover { background: var(--brand-soft); border-color: #b7d3ec; color: var(--brand); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .toolbar button:active { transform: translateY(0); box-shadow: none; }
   .toolbar button.danger { color: #a32d2d; border-color: #e0b9b9; }
+  .toolbar button.danger:hover { background: #fbeeee; border-color: #e0b9b9; color: #a32d2d; }
   .zoom-group {
-    display: flex; align-items: center; gap: 4px; border: 1px solid var(--border-strong);
-    border-radius: 8px; padding: 2px; background: var(--surface); margin-left: auto;
+    display: flex; align-items: center; gap: 2px; border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm); padding: 3px; background: var(--surface); margin-left: auto; box-shadow: var(--shadow-xs);
   }
   .zoom-group button {
-    height: 30px; width: 30px; border: none; background: transparent; border-radius: 6px;
+    height: 28px; width: 28px; border: none; background: transparent; border-radius: 6px;
     cursor: pointer; font-size: 15px; color: var(--text-primary); padding: 0;
+    transition: background .12s var(--ease-out), color .12s var(--ease-out);
+    box-shadow: none;
   }
-  .zoom-group button:hover { background: #f0efe9; }
-  .zoom-label { font-size: 12px; color: var(--text-secondary); width: 46px; text-align: center; }
+  .zoom-group button:hover { background: var(--brand-soft); color: var(--brand); transform: none; }
+  .zoom-label { font-size: 12px; color: var(--text-secondary); width: 44px; text-align: center; }
 
   .viewport {
-    overflow: auto; border: 1px solid var(--border); border-radius: 14px;
-    background: var(--surface); max-height: 78vh; padding: 28px;
+    overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-lg);
+    background: var(--surface); max-height: 78vh; padding: 32px;
+    box-shadow: var(--shadow-md);
   }
 
   .tier-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px; gap: 10px; }
-  .tier-title { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; white-space: nowrap; }
-  .tier-bar { width: 5px; height: 18px; border-radius: 3px; display: inline-block; }
+  .tier-title { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; white-space: nowrap; letter-spacing: -0.005em; }
+  .tier-bar { width: 5px; height: 16px; border-radius: 3px; display: inline-block; }
   .tier-add {
-    height: 30px; padding: 0 12px; font-size: 12px; border-radius: 8px;
-    border: 1px solid var(--border-strong); background: var(--surface); cursor: pointer; white-space: nowrap;
+    height: 30px; padding: 0 13px; font-size: 12px; font-weight: 500; border-radius: var(--radius-sm);
+    border: 1px dashed var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; white-space: nowrap;
+    transition: background .12s var(--ease-out), border-color .12s var(--ease-out), color .12s var(--ease-out);
   }
-  .tier-add:hover { background: #f0efe9; }
+  .tier-add:hover { background: var(--brand-soft); border-color: #b7d3ec; border-style: solid; color: var(--brand); }
 
   .tier-col { display: flex; flex-direction: column; flex-shrink: 0; align-self: stretch; }
   .row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 6px 4px 16px; flex: 1; }
 
   .card {
-    border-radius: 14px; border: 1px solid var(--border); padding: 12px; width: 140px;
-    display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative;
-    background: var(--surface); flex-shrink: 0;
+    border-radius: var(--radius-md); border: 1px solid var(--border); padding: 14px 12px 12px; width: 140px;
+    display: flex; flex-direction: column; align-items: center; gap: 7px; position: relative;
+    background: var(--surface); flex-shrink: 0; box-shadow: var(--shadow-sm);
+    transition: transform .16s var(--ease-out), box-shadow .16s var(--ease-out), border-color .16s var(--ease-out);
   }
+  .card::before {
+    content: ''; position: absolute; top: 0; left: 14px; right: 14px; height: 3px; border-radius: 0 0 3px 3px;
+    background: var(--card-accent, var(--border-strong));
+  }
+  .card:hover:not(.is-dragging) { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: #d7dbe3; }
   /* Các vị trí điều hành cần nhiều chỗ hơn để tên dài không bị khuất. */
-  .card.executive-card { width: 200px; padding: 14px; }
+  .card.executive-card { width: 200px; padding: 16px 14px 14px; }
   .card.executive-card .avatar { width: 60px; height: 60px; }
   .card.executive-card .name-input { height: 34px; font-size: 14px; }
-  .card.executive-card .role-label { font-size: 13px; }
+  .card.executive-card .role-label { font-size: 11px; padding: 3px 10px; }
   .card .remove {
-    position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border: none;
-    background: transparent; color: var(--text-muted); cursor: pointer; font-size: 15px;
-    line-height: 1; border-radius: 6px;
+    position: absolute; top: 7px; right: 7px; width: 22px; height: 22px; border: none;
+    background: transparent; color: var(--text-muted); cursor: pointer; font-size: 14px;
+    line-height: 1; border-radius: 6px; opacity: 0; transition: opacity .12s var(--ease-out), background .12s var(--ease-out), color .12s var(--ease-out);
   }
-  .card .remove:hover { background: rgba(0,0,0,0.06); color: #a32d2d; }
+  .card:hover .remove, .card:focus-within .remove { opacity: 1; }
+  .card .remove:hover { background: #fbeeee; color: #a32d2d; }
+  .profile-btn {
+    position: absolute; top: 7px; left: 7px; width: 22px; height: 22px; border: none;
+    background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px;
+    line-height: 1; border-radius: 6px; padding: 0; opacity: 0; transition: opacity .12s var(--ease-out), background .12s var(--ease-out), color .12s var(--ease-out);
+  }
+  .card:hover .profile-btn, .card:focus-within .profile-btn { opacity: 1; }
+  .profile-btn:hover { background: var(--brand-soft); color: #185FA5; }
   .avatar {
     width: 52px; height: 52px; border-radius: 50%; background: #ffffff;
     border: 2px dashed var(--border-strong); display: flex; align-items: center; justify-content: center;
     color: var(--text-muted); overflow: hidden; cursor: pointer; flex-shrink: 0;
+    transition: border-color .16s var(--ease-out);
   }
   .avatar img { width: 100%; height: 100%; object-fit: cover; }
   .avatar svg { width: 24px; height: 24px; }
   .name-input {
-    width: 100%; height: 30px; font-size: 13px; text-align: center; padding: 0 6px;
-    border-radius: 6px; border: 1px solid var(--border); background: #fff;
+    width: 100%; height: 30px; font-size: 13px; font-weight: 600; text-align: center; padding: 0 6px;
+    border-radius: 7px; border: 1px solid transparent; background: transparent; color: var(--text-primary);
+    transition: border-color .12s var(--ease-out), background .12s var(--ease-out);
   }
-  .name-input:focus { outline: 2px solid #185FA5; outline-offset: 1px; }
-  .role-label { font-size: 12px; font-weight: 800; color: var(--text-primary); text-align: center; }
+  .name-input:hover { background: #f7f8fa; }
+  .name-input:focus { outline: none; border-color: #185FA5; background: #fff; box-shadow: 0 0 0 3px var(--brand-soft); }
+  .role-label {
+    font-size: 10.5px; font-weight: 700; color: var(--card-accent, var(--text-secondary)); text-align: center;
+    text-transform: uppercase; letter-spacing: 0.03em; background: var(--card-accent-soft, #f2f3f5);
+    padding: 2px 9px; border-radius: 999px;
+  }
+  .person-title { font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.3; min-height: 14px; }
 
   .connector { position: relative; width: 44px; align-self: stretch; flex-shrink: 0; }
   .static-line { height: 1px; width: 16px; background: var(--border-strong); margin: auto 0; flex-shrink: 0; }
@@ -119,26 +170,36 @@
   }
   #org-root.layout-vertical .group-block { min-width: max-content; }
 
-  .groups-container { display: flex; flex-direction: column; gap: 24px; padding: 6px 4px 16px; }
+  .groups-container { display: flex; flex-direction: column; gap: 20px; padding: 6px 4px 16px; }
   .group-block {
-    display: flex; flex-direction: column; gap: 10px;
-    border: 1px dashed var(--border-strong); border-radius: 16px; padding: 14px;
-    background: rgba(0,0,0,0.012); position: relative;
+    display: flex; flex-direction: column; gap: 12px;
+    border: 1px solid var(--border); border-left: 3px solid var(--border-strong); border-radius: var(--radius-md); padding: 16px;
+    background: var(--surface); position: relative; box-shadow: var(--shadow-xs);
+    transition: box-shadow .16s var(--ease-out), transform .16s var(--ease-out);
   }
+  .group-block:hover { box-shadow: var(--shadow-sm); }
   .group-body { display: flex; flex-direction: row; align-items: flex-start; }
   .dept-input {
-    font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: 8px;
-    border: 1px solid var(--border-strong); background: #fff; width: 240px;
-    max-width: 100%; color: var(--text-primary);
+    font-size: 13px; font-weight: 700; padding: 7px 12px; border-radius: var(--radius-sm);
+    border: 1px solid transparent; background: transparent; width: 240px;
+    max-width: 100%; color: var(--text-primary); transition: background .12s var(--ease-out), border-color .12s var(--ease-out);
   }
-  .dept-input:focus { outline: 2px solid #185FA5; outline-offset: 1px; }
+  .dept-input:hover { background: #f7f8fa; }
+  .dept-input:focus { outline: none; border-color: #185FA5; background: #fff; box-shadow: 0 0 0 3px var(--brand-soft); }
   .dept-input::placeholder { font-weight: 400; color: var(--text-muted); }
   .group-remove {
     position: absolute; top: -10px; right: -10px; width: 24px; height: 24px; border-radius: 50%;
     border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-muted);
-    cursor: pointer; font-size: 13px; line-height: 1;
+    cursor: pointer; font-size: 13px; line-height: 1; box-shadow: var(--shadow-xs);
+    transition: color .12s var(--ease-out), border-color .12s var(--ease-out), transform .12s var(--ease-out);
   }
-  .group-remove:hover { color: #a32d2d; border-color: #e0b9b9; }
+  .group-remove:hover { color: #a32d2d; border-color: #e0b9b9; transform: scale(1.08); }
+  .group-collapse {
+    position: absolute; top: -10px; right: 20px; height: 24px; padding: 0 8px; border-radius: 12px;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-secondary); cursor: pointer; font-size: 11px;
+    box-shadow: var(--shadow-xs); transition: color .12s var(--ease-out), border-color .12s var(--ease-out);
+  }
+  .group-collapse:hover { color: #185FA5; border-color: #9bc4e4; }
 
   .group-col { display: flex; flex-direction: column; align-items: center; }
   .subgroups-col { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
@@ -148,42 +209,113 @@
   .leaf-block { display: flex; flex-direction: row; align-items: center; }
 
   .team-table {
-    display: flex; border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
-    background: var(--surface);
+    display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
+    background: #fbfbfc;
   }
   .team-col {
-    display: flex; flex-direction: column; padding: 8px;
+    display: flex; flex-direction: column; padding: 10px;
     border-right: 1px solid var(--border);
   }
   .team-col-body { display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
   .team-col-chunk { display: flex; flex-direction: column; width: 150px; flex-shrink: 0; }
   .team-col:last-child { border-right: none; }
   .team-col-header {
-    font-size: 11px; font-weight: 600; text-align: center; padding-bottom: 6px;
-    margin-bottom: 6px; border-bottom: 1px solid var(--border); color: var(--text-secondary);
+    font-size: 10.5px; font-weight: 700; text-align: center; padding-bottom: 7px;
+    margin-bottom: 7px; border-bottom: 1px solid var(--border); color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.04em;
   }
-  .team-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .team-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px; padding: 4px 5px;
+    border-radius: 8px; background: var(--surface); border: 1px solid var(--border);
+    transition: box-shadow .14s var(--ease-out), border-color .14s var(--ease-out), transform .14s var(--ease-out);
+  }
+  .team-row:hover:not(.is-dragging) { box-shadow: var(--shadow-xs); border-color: #d7dbe3; }
+  .card[draggable="true"], .team-row[draggable="true"] { cursor: grab; }
+  .card.is-dragging, .team-row.is-dragging { opacity: 0.42; cursor: grabbing; }
+  .card.is-drop-target, .team-row.is-drop-target { outline: 2px dashed #185FA5; outline-offset: 3px; }
+  .team-col-body.is-drop-target { background: var(--brand-soft); border-radius: 8px; }
   .avatar-sm {
-    width: 40px; height: 40px; border-radius: 50%; background: #ffffff;
+    width: 36px; height: 36px; border-radius: 50%; background: #ffffff;
     border: 2px dashed var(--border-strong); display: flex; align-items: center; justify-content: center;
     color: var(--text-muted); overflow: hidden; cursor: pointer; flex-shrink: 0;
+    transition: border-color .14s var(--ease-out);
   }
   .avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
-  .avatar-sm svg { width: 20px; height: 20px; }
+  .avatar-sm svg { width: 18px; height: 18px; }
   .team-row input {
-    flex: 1; height: 26px; font-size: 12px; padding: 0 6px; border-radius: 5px;
-    border: 1px solid var(--border); min-width: 0;
+    flex: 1; height: 26px; font-size: 12px; font-weight: 500; padding: 0 6px; border-radius: 5px;
+    border: 1px solid transparent; background: transparent; min-width: 0; color: var(--text-primary);
+    transition: background .12s var(--ease-out), border-color .12s var(--ease-out);
   }
-  .team-row input:focus { outline: 2px solid #185FA5; outline-offset: 1px; }
+  .team-row input:hover { background: #f2f3f5; }
+  .team-row input:focus { outline: none; border-color: #185FA5; background: #fff; box-shadow: 0 0 0 3px var(--brand-soft); }
   .team-row button {
     width: 20px; height: 20px; border: none; background: transparent; color: var(--text-muted);
     cursor: pointer; font-size: 12px; border-radius: 5px; flex-shrink: 0;
+    transition: background .12s var(--ease-out), color .12s var(--ease-out);
   }
-  .team-row button:hover { background: rgba(0,0,0,0.06); color: #a32d2d; }
+  .team-row button:hover { background: #fbeeee; color: #a32d2d; }
+  .team-row .profile-btn { position: static; width: 20px; height: 20px; flex-shrink: 0; }
+  .team-row .profile-btn:hover { background: var(--brand-soft); color: #185FA5; }
   .team-col .add-mini { width: 100%; margin-top: 2px; }
 
   .status { font-size: 12px; color: var(--text-muted); text-align: right; margin-top: 12px; min-height: 16px; }
+  .drag-hint { font-size: 12px; color: var(--text-secondary); }
+  .search-input, .filter-select { height: 34px; border: 1px solid var(--border-strong); border-radius: 8px; background: #fff; color: var(--text-primary); font-size: 13px; padding: 0 10px; }
+  .search-input { width: 190px; }
+  .is-filtered-out { display: none !important; }
+  .profile-modal {
+    position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(26, 27, 25, 0.38);
+  }
+  .profile-modal.is-open { display: flex; }
+  .profile-dialog { width: min(460px, 100%); background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 16px 44px rgba(0,0,0,0.2); }
+  .profile-dialog h2 { font-size: 17px; margin: 0 0 16px; }
+  .profile-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .profile-field label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+  .profile-field input, .profile-field textarea { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; }
+  .profile-field textarea { min-height: 74px; resize: vertical; }
+  .profile-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .profile-actions button { height: 34px; padding: 0 14px; border: 1px solid var(--border-strong); border-radius: 8px; background: #fff; cursor: pointer; }
+  .profile-actions .save-profile { color: #fff; background: #185FA5; border-color: #185FA5; }
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .settings-grid .profile-field.full-width { grid-column: 1 / -1; }
+  .settings-upload-row { display: flex; align-items: center; gap: 8px; }
+  .settings-upload-row button { height: 32px; padding: 0 10px; font-size: 12px; border-radius: 7px; border: 1px solid var(--border-strong); background: #fff; cursor: pointer; white-space: nowrap; }
+  .settings-upload-row button:hover { background: #f0efe9; }
+  .settings-preview { width: 40px; height: 40px; border-radius: 8px; object-fit: contain; border: 1px solid var(--border); background: #fff; flex-shrink: 0; display: none; }
+  .settings-preview.is-visible { display: block; }
+  .settings-preview.bg-preview { object-fit: cover; border-radius: 6px; }
+  .settings-range-row { display: flex; align-items: center; gap: 8px; }
+  .settings-range-row input[type="range"] { flex: 1; }
+  .settings-range-row .range-value { font-size: 12px; color: var(--text-secondary); width: 34px; text-align: right; }
+  .settings-select { height: 34px; border-radius: 8px; border: 1px solid var(--border); padding: 0 8px; font: inherit; font-size: 13px; background: #fff; width: 100%; }
   input[type="file"] { display: none; }
+
+  /* Màu theo phòng ban: ô chọn màu nhỏ cạnh tên bộ phận */
+  .group-header-row { display: flex; align-items: center; gap: 8px; }
+  .group-header-row .dept-input { flex: 1; }
+  .dept-color-input { width: 34px; height: 34px; padding: 2px; border: 1px solid var(--border-strong); border-radius: 8px; background: #fff; cursor: pointer; flex-shrink: 0; }
+
+  /* Ảnh nền tùy chỉnh phía sau sơ đồ */
+  .viewport { position: relative; }
+  .viewport::before {
+    content: ''; position: absolute; inset: 0; border-radius: 14px; pointer-events: none; z-index: 0;
+    background-image: var(--bg-image, none); background-size: cover; background-position: center;
+    opacity: var(--bg-image-opacity, 0.15);
+  }
+  .viewport > #org-root { position: relative; z-index: 1; }
+
+  /* Kiểu thẻ nhân sự */
+  body.card-style-square .card { border-radius: 6px; }
+  body.card-style-square .avatar { border-radius: 10px; }
+  body.card-style-square .avatar-sm { border-radius: 8px; }
+  body.card-style-compact .card { padding: 8px; gap: 5px; }
+  body.card-style-compact .card.executive-card { padding: 9px; }
+  body.card-style-compact .avatar { width: 40px; height: 40px; }
+  body.card-style-compact .card.executive-card .avatar { width: 46px; height: 46px; }
+  body.card-style-compact .person-title { display: none; }
+  body.card-style-compact .role-label { font-size: 11px; }
 
   .lock-badge {
     display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 0 12px; height: 34px;
@@ -199,9 +331,10 @@
   body.view-mode .group-remove,
   body.view-mode .tier-add,
   body.view-mode .add-mini,
-  body.view-mode .team-row button,
+  body.view-mode .team-row button:not(.profile-btn),
   body.view-mode #btn-reset,
-  body.view-mode #btn-import {
+  body.view-mode #btn-import,
+  body.view-mode #btn-import-xlsx {
     opacity: 0.35; pointer-events: none; cursor: not-allowed;
   }
   body.view-mode .avatar,
@@ -211,29 +344,114 @@
   body.view-mode input:not(#file-input) {
     background: #fafaf8; color: var(--text-secondary); cursor: default;
   }
+
+  /* Menu "Thêm" gộp các nút ít dùng lại cho điện thoại đỡ rối */
+  .toolbar-more { display: contents; }
+  .mobile-more-toggle { display: none; }
+  .history-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+  .history-list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .history-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .history-restore-btn { flex-shrink: 0; font-size: 12px; padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--brand); background: var(--brand-soft); color: var(--brand); cursor: pointer; font-weight: 600; }
+  .history-restore-btn:hover { background: var(--brand); color: #fff; }
+  .history-restore-btn:disabled { opacity: 0.45; cursor: not-allowed; background: var(--surface); color: var(--text-muted); border-color: var(--border-strong); }
+  .history-list li:last-child { border-bottom: none; }
+  .history-name { font-weight: 600; color: var(--text-primary); }
+  .history-action { color: var(--text-secondary); font-size: 12.5px; }
+  .history-time { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+  .history-empty { font-size: 13px; color: var(--text-secondary); padding: 8px 0; }
+  .share-note { font-size: 12px; color: var(--text-secondary); margin: 10px 0 0; line-height: 1.4; }
+
+  /* ---- Hiệu ứng khi thêm / xóa nhân sự ---- */
+  @keyframes cardEnter {
+    from { opacity: 0; transform: translateY(10px) scale(.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .card, .group-block, .team-row {
+    animation: cardEnter .32s var(--ease-out) both;
+  }
+  .card.is-leaving, .group-block.is-leaving, .team-row.is-leaving {
+    animation: none !important;
+    transition: opacity .16s ease, transform .16s ease;
+    opacity: 0 !important;
+    transform: scale(.9) !important;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card, .group-block, .team-row { animation: none !important; }
+    .card.is-leaving, .group-block.is-leaving, .team-row.is-leaving { transition: none !important; }
+  }
+
+  @media (max-width: 720px) {
+    body { padding: 16px 10px 34px; }
+    .toolbar { gap: 6px; }
+    .toolbar button, .lock-badge { min-height: 40px; }
+    .zoom-group { margin-left: 0; }
+    .search-input { width: min(100%, 230px); }
+    .viewport { padding: 16px; border-radius: 10px; max-height: 72vh; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+    .card.executive-card { width: 180px; }
+    #org-root.layout-vertical .tier-header { flex-wrap: wrap; }
+    #org-root.layout-vertical .groups-container { justify-content: flex-start; }
+
+    /* Trên điện thoại: chỉ hiện nút thiết yếu, gộp phần còn lại vào nút "Thêm" */
+    .mobile-more-toggle {
+      display: inline-flex; align-items: center; justify-content: center;
+      height: 40px; padding: 0 12px; font-size: 13px; border-radius: 8px;
+      border: 1px dashed var(--border-strong); background: var(--surface); color: var(--text-secondary); cursor: pointer;
+    }
+    .toolbar-more { display: none; }
+    .toolbar.show-more .toolbar-more { display: contents; }
+    .toolbar button, .toolbar .lock-badge, .toolbar .search-input, .toolbar .filter-select { flex: 0 0 auto; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Sơ đồ phân cấp nhân sự</h1>
-  <p class="sub">Sơ đồ có thể chuyển ngang/dọc: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây — ai có link đều xem được, chỉ người có mật khẩu mới chỉnh sửa được.</p>
+  <div class="org-heading">
+    <img id="company-logo" class="company-logo" alt="Logo công ty">
+    <div><h1 id="org-heading">Sơ đồ phân cấp nhân sự</h1><p class="sub" id="org-subtitle">Sơ đồ có thể chuyển ngang/dọc: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây — ai có link đều xem được, chỉ người có mật khẩu mới chỉnh sửa được.</p></div>
+  </div>
+
 
   <div class="toolbar">
     <span class="lock-badge is-view" id="lock-badge">🔒 Đang xem</span>
     <button id="btn-toggle-edit">🔓 Mở khóa chỉnh sửa</button>
+    <button id="btn-rename-editor" style="display:none;" title="Đổi tên hiển thị trong lịch sử chỉnh sửa">✎ Tên của bạn</button>
+    <button id="btn-customize">Tùy chỉnh</button>
+    <button id="btn-copy-link" title="Link chỉ xem — ai có link đều xem được, không sửa được">🔗 Link chỉ xem</button>
+    <button id="btn-copy-edit-link" title="Link chỉnh sửa — người nhận vào là sửa được luôn, không cần nhập mật khẩu">🔑 Link chỉnh sửa</button>
+    <button id="btn-history" title="Xem ai đã chỉnh sửa và lúc nào">🕘 Lịch sử</button>
     <button id="btn-toggle-layout" title="Đổi chiều hiển thị sơ đồ">↕ Chuyển sang dọc</button>
-    <button id="btn-download-image">Tải ảnh về máy (.png)</button>
-    <button id="btn-export">Xuất file (.json)</button>
-    <button id="btn-import">Nhập file (.json)</button>
-    <button id="btn-reset" class="danger">Xóa hết, làm lại</button>
-    <input type="file" id="file-input" accept=".json">
-    <span id="img-progress" style="font-size:12px;color:var(--text-muted);"></span>
+    <button id="btn-collapse-all" title="Thu gọn tất cả bộ phận — dễ xem trên điện thoại">▾ Thu gọn tất cả</button>
+    <button id="btn-expand-all" title="Mở rộng tất cả bộ phận">▸ Mở tất cả</button>
+    <button id="btn-toggle-more" class="mobile-more-toggle" type="button">⋯ Thêm</button>
+    <span class="toolbar-more" id="toolbar-more">
+      <button id="btn-download-image">Tải ảnh về máy (.png)</button>
+      <button id="btn-download-pdf">Xuất PDF</button>
+      <button id="btn-export">Xuất file (.json)</button>
+      <button id="btn-import">Nhập file (.json)</button>
+      <button id="btn-export-xlsx">Xuất Excel</button>
+      <button id="btn-import-xlsx">Nhập Excel</button>
+      <button id="btn-reset" class="danger">Xóa hết, làm lại</button>
+      <input type="file" id="file-input" accept=".json">
+      <input type="file" id="file-input-xlsx" accept=".xlsx,.xls">
+      <span id="img-progress" style="font-size:12px;color:var(--text-muted);"></span>
+      <span class="drag-hint">↕ Mở khóa để kéo-thả thẻ</span>
+    </span>
+    <input id="search-input" class="search-input" type="search" placeholder="Tìm tên, email, phòng ban...">
+    <select id="filter-select" class="filter-select" aria-label="Lọc theo nhóm">
+      <option value="all">Tất cả vị trí</option>
+      <option value="executive">Cấp điều hành</option>
+      <option value="manager">Quản lý trung cấp</option>
+      <option value="deputy">Phó quản lý</option>
+      <option value="staff">Nhân viên</option>
+    </select>
     <div class="zoom-group">
       <button id="zoom-out" aria-label="Thu nhỏ">−</button>
       <span class="zoom-label" id="zoom-label">100%</span>
       <button id="zoom-in" aria-label="Phóng to">+</button>
       <button id="zoom-reset" aria-label="Đặt lại 100%" style="width:auto;padding:0 8px;font-size:11px;">100%</button>
     </div>
+    <span class="zoom-hint" style="font-size:11px;color:var(--text-muted);white-space:nowrap;">Giữ Ctrl + cuộn chuột để phóng to/thu nhỏ</span>
   </div>
 
   <div class="viewport">
@@ -243,6 +461,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
@@ -299,11 +519,26 @@ let state = null;
 let pendingAvatarTarget = null;
 let zoomLevel = 1;
 let layoutOrientation = localStorage.getItem(LAYOUT_STORAGE_KEY) === 'vertical' ? 'vertical' : 'horizontal';
+let dragPayload = null;
+let searchQuery = '';
+let roleFilter = 'all';
+
 
 // ---- Phân quyền chỉnh sửa bằng mật khẩu ----
 let editMode = false;
 let applyingRemoteUpdate = false; // tránh render đè lên trong lúc đang gõ khi có cập nhật từ người khác
 let saveTimer = null;
+const EDITOR_NAME_KEY = 'org-chart-editor-name-v1';
+let currentEditorName = localStorage.getItem(EDITOR_NAME_KEY) || '';
+let editHistory = []; // { name, at } — danh sách chỉnh sửa gần nhất, đồng bộ từ đám mây
+
+function ensureEditorName() {
+  if (currentEditorName && currentEditorName.trim()) return currentEditorName;
+  const name = prompt('Nhập tên của bạn để lưu vào lịch sử chỉnh sửa (VD: Chị Hoa - Kế toán):', '');
+  currentEditorName = (name || '').trim() || 'Ẩn danh';
+  try { localStorage.setItem(EDITOR_NAME_KEY, currentEditorName); } catch (err) {}
+  return currentEditorName;
+}
 
 async function sha256Hex(text) {
   const enc = new TextEncoder().encode(text);
@@ -314,20 +549,232 @@ async function sha256Hex(text) {
 function updateLockUI() {
   const badge = document.getElementById('lock-badge');
   const btn = document.getElementById('btn-toggle-edit');
+  const renameBtn = document.getElementById('btn-rename-editor');
   document.body.classList.toggle('view-mode', !editMode);
   if (editMode) {
-    badge.textContent = '🔓 Đang chỉnh sửa';
+    badge.textContent = '🔓 Đang chỉnh sửa' + (currentEditorName ? ' · ' + currentEditorName : '');
     badge.className = 'lock-badge is-edit';
     btn.textContent = '🔒 Khóa lại';
     btn.classList.add('is-edit');
+    renameBtn.style.display = '';
   } else {
     badge.textContent = '🔒 Đang xem';
     badge.className = 'lock-badge is-view';
     btn.textContent = '🔓 Mở khóa chỉnh sửa';
     btn.classList.remove('is-edit');
+    renameBtn.style.display = 'none';
   }
   lockFieldsIfNeeded(); // bật/tắt lại toàn bộ ô nhập liệu và nút theo trạng thái mới nhất
 }
+
+function ensurePersonProfile(person) {
+  ['title', 'phone', 'email', 'note'].forEach((key) => {
+    if (typeof person[key] !== 'string') person[key] = '';
+  });
+  return person;
+}
+
+function personSearchText(person, extra = '') {
+  ensurePersonProfile(person);
+  return [person.name, person.title, person.phone, person.email, person.note, extra].join(' ').toLocaleLowerCase('vi-VN');
+}
+
+function applySearchFilter() {
+  const root = document.getElementById('org-root');
+  const query = searchQuery.trim().toLocaleLowerCase('vi-VN');
+  root.querySelectorAll('[data-person-search]').forEach((el) => {
+    const textMatches = !query || el.dataset.personSearch.includes(query);
+    const roleMatches = roleFilter === 'all' || el.dataset.personGroup === roleFilter;
+    el.classList.toggle('is-filtered-out', !(textMatches && roleMatches));
+  });
+  root.querySelectorAll('.group-block').forEach((group) => {
+    const people = Array.from(group.querySelectorAll('[data-person-search]'));
+    group.classList.toggle('is-filtered-out', people.length > 0 && people.every((person) => person.classList.contains('is-filtered-out')));
+  });
+}
+
+let profileTarget = null;
+const profileModal = document.createElement('div');
+profileModal.className = 'profile-modal';
+profileModal.innerHTML =
+  '<div class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-heading">' +
+    '<h2 id="profile-heading">Hồ sơ nhân sự</h2>' +
+    '<div class="profile-field"><label for="profile-title">Chức danh chi tiết</label><input id="profile-title" type="text" placeholder="VD: Trưởng phòng Kinh doanh"></div>' +
+    '<div class="profile-field"><label for="profile-phone">Số điện thoại</label><input id="profile-phone" type="tel" placeholder="VD: 0901 234 567"></div>' +
+    '<div class="profile-field"><label for="profile-email">Email</label><input id="profile-email" type="email" placeholder="VD: ten@congty.com"></div>' +
+    '<div class="profile-field"><label for="profile-note">Ghi chú</label><textarea id="profile-note" placeholder="Thông tin thêm..."></textarea></div>' +
+    '<div class="profile-actions"><button type="button" class="close-profile">Đóng</button><button type="button" class="save-profile">Lưu hồ sơ</button></div>' +
+  '</div>';
+document.body.appendChild(profileModal);
+
+function openProfile(person) {
+  profileTarget = ensurePersonProfile(person);
+  profileModal.querySelector('#profile-title').value = profileTarget.title;
+  profileModal.querySelector('#profile-phone').value = profileTarget.phone;
+  profileModal.querySelector('#profile-email').value = profileTarget.email;
+  profileModal.querySelector('#profile-note').value = profileTarget.note;
+  profileModal.querySelectorAll('input, textarea').forEach((field) => { field.disabled = !editMode; });
+  profileModal.querySelector('.save-profile').style.display = editMode ? '' : 'none';
+  profileModal.classList.add('is-open');
+}
+
+function closeProfile() {
+  profileModal.classList.remove('is-open');
+  profileTarget = null;
+}
+
+profileModal.querySelector('.close-profile').onclick = closeProfile;
+profileModal.querySelector('.save-profile').onclick = () => {
+  if (!editMode || !profileTarget) return;
+  profileTarget.title = profileModal.querySelector('#profile-title').value.trim();
+  profileTarget.phone = profileModal.querySelector('#profile-phone').value.trim();
+  profileTarget.email = profileModal.querySelector('#profile-email').value.trim();
+  profileTarget.note = profileModal.querySelector('#profile-note').value.trim();
+  closeProfile();
+  render();
+  saveState({ action: 'Cập nhật hồ sơ nhân sự (chức danh/SĐT/email/ghi chú)' });
+};
+profileModal.addEventListener('click', (event) => { if (event.target === profileModal) closeProfile(); });
+
+const settingsModal = document.createElement('div');
+settingsModal.className = 'profile-modal';
+settingsModal.innerHTML =
+  '<div class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-heading">' +
+    '<h2 id="settings-heading">Tùy chỉnh sơ đồ</h2>' +
+    '<div class="settings-grid">' +
+      '<div class="profile-field full-width"><label for="setting-org-name">Tên đơn vị</label><input id="setting-org-name" type="text"></div>' +
+      '<div class="profile-field full-width"><label for="setting-subtitle">Mô tả</label><textarea id="setting-subtitle"></textarea></div>' +
+      '<div class="profile-field full-width">' +
+        '<label>Logo công ty</label>' +
+        '<div class="settings-upload-row">' +
+          '<img id="setting-logo-preview" class="settings-preview" alt="Xem trước logo">' +
+          '<button type="button" id="btn-upload-logo">Tải ảnh lên</button>' +
+          '<input id="setting-logo-url" type="url" placeholder="hoặc dán link ảnh https://...">' +
+        '</div>' +
+      '</div>' +
+      '<div class="profile-field"><label for="setting-brand">Màu chủ đạo</label><input id="setting-brand" type="color"></div>' +
+      '<div class="profile-field"><label for="setting-card-style">Kiểu thẻ nhân sự</label>' +
+        '<select id="setting-card-style" class="settings-select">' +
+          '<option value="rounded">Bo tròn (mặc định)</option>' +
+          '<option value="square">Vuông vức</option>' +
+          '<option value="compact">Gọn nhẹ (ẩn chức danh phụ)</option>' +
+        '</select>' +
+      '</div>' +
+      '<div class="profile-field full-width">' +
+        '<label>Ảnh nền sơ đồ</label>' +
+        '<div class="settings-upload-row">' +
+          '<img id="setting-bg-preview" class="settings-preview bg-preview" alt="Xem trước ảnh nền">' +
+          '<button type="button" id="btn-upload-bg">Tải ảnh lên</button>' +
+          '<input id="setting-bg-url" type="url" placeholder="hoặc dán link ảnh https://...">' +
+          '<button type="button" id="btn-clear-bg" title="Bỏ ảnh nền">✕ Bỏ ảnh</button>' +
+        '</div>' +
+        '<div class="settings-range-row" style="margin-top:8px;">' +
+          '<span style="font-size:12px;color:var(--text-secondary);">Độ đậm</span>' +
+          '<input id="setting-bg-opacity" type="range" min="5" max="60" step="5">' +
+          '<span class="range-value" id="setting-bg-opacity-value">15%</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="profile-actions"><button type="button" class="close-settings">Đóng</button><button type="button" class="save-settings">Lưu tùy chỉnh</button></div>' +
+  '</div>';
+document.body.appendChild(settingsModal);
+
+// Tệp ảnh tạm cho logo/ảnh nền khi người dùng chọn "Tải ảnh lên" (chỉ ghi vào state khi bấm Lưu)
+let pendingLogoDataUrl = null;
+let pendingBgDataUrl = null;
+
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function updateSettingsPreview(imgEl, src) {
+  if (src) { imgEl.src = src; imgEl.classList.add('is-visible'); }
+  else { imgEl.src = ''; imgEl.classList.remove('is-visible'); }
+}
+
+const settingsLogoFileInput = document.createElement('input');
+settingsLogoFileInput.type = 'file';
+settingsLogoFileInput.accept = 'image/*';
+settingsLogoFileInput.onchange = async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  pendingLogoDataUrl = await fileToDataURL(file);
+  settingsModal.querySelector('#setting-logo-url').value = '';
+  updateSettingsPreview(settingsModal.querySelector('#setting-logo-preview'), pendingLogoDataUrl);
+};
+document.body.appendChild(settingsLogoFileInput);
+
+const settingsBgFileInput = document.createElement('input');
+settingsBgFileInput.type = 'file';
+settingsBgFileInput.accept = 'image/*';
+settingsBgFileInput.onchange = async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  pendingBgDataUrl = await fileToDataURL(file);
+  settingsModal.querySelector('#setting-bg-url').value = '';
+  updateSettingsPreview(settingsModal.querySelector('#setting-bg-preview'), pendingBgDataUrl);
+};
+document.body.appendChild(settingsBgFileInput);
+
+settingsModal.querySelector('#btn-upload-logo').onclick = () => settingsLogoFileInput.click();
+settingsModal.querySelector('#btn-upload-bg').onclick = () => settingsBgFileInput.click();
+settingsModal.querySelector('#btn-clear-bg').onclick = () => {
+  pendingBgDataUrl = '';
+  settingsModal.querySelector('#setting-bg-url').value = '';
+  updateSettingsPreview(settingsModal.querySelector('#setting-bg-preview'), '');
+};
+settingsModal.querySelector('#setting-logo-url').oninput = (e) => {
+  pendingLogoDataUrl = null;
+  updateSettingsPreview(settingsModal.querySelector('#setting-logo-preview'), e.target.value.trim());
+};
+settingsModal.querySelector('#setting-bg-url').oninput = (e) => {
+  pendingBgDataUrl = null;
+  updateSettingsPreview(settingsModal.querySelector('#setting-bg-preview'), e.target.value.trim());
+};
+settingsModal.querySelector('#setting-bg-opacity').oninput = (e) => {
+  settingsModal.querySelector('#setting-bg-opacity-value').textContent = e.target.value + '%';
+};
+
+function openSettings() {
+  const settings = ensureSettings();
+  pendingLogoDataUrl = null;
+  pendingBgDataUrl = null;
+  settingsModal.querySelector('#setting-org-name').value = settings.orgName;
+  settingsModal.querySelector('#setting-subtitle').value = settings.subtitle;
+  settingsModal.querySelector('#setting-logo-url').value = settings.logoUrl && !settings.logoUrl.startsWith('data:') ? settings.logoUrl : '';
+  updateSettingsPreview(settingsModal.querySelector('#setting-logo-preview'), settings.logoUrl);
+  settingsModal.querySelector('#setting-brand').value = settings.brandColor;
+  settingsModal.querySelector('#setting-card-style').value = settings.cardStyle || 'rounded';
+  settingsModal.querySelector('#setting-bg-url').value = settings.bgImage && !settings.bgImage.startsWith('data:') ? settings.bgImage : '';
+  updateSettingsPreview(settingsModal.querySelector('#setting-bg-preview'), settings.bgImage);
+  const opacityVal = settings.bgOpacity || '15';
+  settingsModal.querySelector('#setting-bg-opacity').value = opacityVal;
+  settingsModal.querySelector('#setting-bg-opacity-value').textContent = opacityVal + '%';
+  settingsModal.classList.add('is-open');
+}
+function closeSettings() { settingsModal.classList.remove('is-open'); }
+settingsModal.querySelector('.close-settings').onclick = closeSettings;
+settingsModal.querySelector('.save-settings').onclick = () => {
+  if (!editMode) return;
+  const settings = ensureSettings();
+  settings.orgName = settingsModal.querySelector('#setting-org-name').value.trim() || defaultSettings().orgName;
+  settings.subtitle = settingsModal.querySelector('#setting-subtitle').value.trim() || defaultSettings().subtitle;
+  settings.logoUrl = pendingLogoDataUrl !== null ? pendingLogoDataUrl : settingsModal.querySelector('#setting-logo-url').value.trim();
+  settings.brandColor = settingsModal.querySelector('#setting-brand').value;
+  settings.cardStyle = settingsModal.querySelector('#setting-card-style').value;
+  settings.bgImage = pendingBgDataUrl !== null ? pendingBgDataUrl : settingsModal.querySelector('#setting-bg-url').value.trim();
+  settings.bgOpacity = settingsModal.querySelector('#setting-bg-opacity').value;
+  closeSettings();
+  render();
+  saveState({ action: 'Thay đổi tùy chỉnh sơ đồ (tên đơn vị/logo/màu/kiểu thẻ)' });
+};
+settingsModal.addEventListener('click', (event) => { if (event.target === settingsModal) closeSettings(); });
 
 // Bọc quanh các hành động chỉnh sửa: nếu chưa mở khóa thì chặn lại và nhắc nhập mật khẩu
 function guardEdit(fn) {
@@ -340,6 +787,25 @@ function guardEdit(fn) {
   };
 }
 
+async function checkEditPassword(pass) {
+  if (!pass) return false;
+  const hash = await sha256Hex(pass);
+  return hash === EDIT_PASSWORD_HASH;
+}
+
+function activateEditMode(source) {
+  editMode = true;
+  ensureEditorName();
+  updateLockUI();
+  if (!firebaseReady) {
+    setStatus('⚠️ Đúng mật khẩu, nhưng không có kết nối đám mây — đang sửa tạm trên máy này.');
+  } else if (source === 'link') {
+    setStatus('Đã mở khóa chỉnh sửa qua link mời — chào ' + currentEditorName + '.');
+  } else {
+    setStatus('Mật khẩu đúng — đã mở khóa chỉnh sửa.');
+  }
+}
+
 document.getElementById('btn-toggle-edit').onclick = async () => {
   if (editMode) {
     editMode = false;
@@ -349,22 +815,57 @@ document.getElementById('btn-toggle-edit').onclick = async () => {
   const pass = prompt('Nhập mật khẩu chỉnh sửa:');
   if (pass === null || pass === '') return;
 
-  const hash = await sha256Hex(pass);
-  if (hash !== EDIT_PASSWORD_HASH) {
+  const ok = await checkEditPassword(pass);
+  if (!ok) {
     alert('Sai mật khẩu.');
     return;
   }
-
-  editMode = true;
-  updateLockUI();
-  if (!firebaseReady) {
-    setStatus('⚠️ Đúng mật khẩu, nhưng không có kết nối đám mây — đang sửa tạm trên máy này.');
-  } else {
-    setStatus('Mật khẩu đúng — đã mở khóa chỉnh sửa.');
-  }
+  activateEditMode('password');
 };
 
-function emptyPerson() { return { name: '', photo: null }; }
+document.getElementById('btn-rename-editor').onclick = () => {
+  const name = prompt('Đổi tên hiển thị trong lịch sử chỉnh sửa:', currentEditorName || '');
+  if (name === null) return;
+  currentEditorName = name.trim() || 'Ẩn danh';
+  try { localStorage.setItem(EDITOR_NAME_KEY, currentEditorName); } catch (err) {}
+  updateLockUI();
+};
+
+function emptyPerson() { return { name: '', photo: null, title: '', phone: '', email: '', note: '' }; }
+function defaultSettings() {
+  return {
+    orgName: 'Sơ đồ phân cấp nhân sự',
+    subtitle: 'Sơ đồ có thể chuyển ngang/dọc: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây — ai có link đều xem được, chỉ người có mật khẩu mới chỉnh sửa được.',
+    logoUrl: '', brandColor: '#185FA5',
+    bgImage: '', bgOpacity: '15', cardStyle: 'rounded'
+  };
+}
+function ensureSettings() {
+  if (!state.settings || typeof state.settings !== 'object') state.settings = defaultSettings();
+  const defaults = defaultSettings();
+  Object.keys(defaults).forEach((key) => { if (typeof state.settings[key] !== 'string') state.settings[key] = defaults[key]; });
+  return state.settings;
+}
+function applyOrgSettings() {
+  const settings = ensureSettings();
+  document.getElementById('org-heading').textContent = settings.orgName || defaultSettings().orgName;
+  document.getElementById('org-subtitle').textContent = settings.subtitle || defaultSettings().subtitle;
+  const logo = document.getElementById('company-logo');
+  logo.src = settings.logoUrl || '';
+  logo.style.display = settings.logoUrl ? 'block' : 'none';
+  document.documentElement.style.setProperty('--brand', settings.brandColor || '#185FA5');
+
+  // Ảnh nền phía sau sơ đồ
+  const bgImage = settings.bgImage ? 'url("' + settings.bgImage.replace(/"/g, '\\"') + '")' : 'none';
+  document.documentElement.style.setProperty('--bg-image', bgImage);
+  const opacity = Math.max(0, Math.min(100, parseInt(settings.bgOpacity, 10) || 15)) / 100;
+  document.documentElement.style.setProperty('--bg-image-opacity', String(opacity));
+
+  // Kiểu thẻ nhân sự
+  document.body.classList.remove('card-style-square', 'card-style-compact');
+  if (settings.cardStyle === 'square') document.body.classList.add('card-style-square');
+  else if (settings.cardStyle === 'compact') document.body.classList.add('card-style-compact');
+}
 function hexToRgba(hex, alpha) {
   const h = hex.replace('#', '');
   const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
@@ -377,10 +878,11 @@ function hexToRgba(hex, alpha) {
 function emptyTeam() {
   return { t6: [emptyPerson()], t7: [emptyPerson()] };
 }
-function emptyTrungCap() { return { ...emptyPerson(), team: emptyTeam(), dept: '' }; }
+function emptyTrungCap() { return { ...emptyPerson(), team: emptyTeam(), dept: '', deptColor: '' }; }
 
 function defaultState() {
   return {
+    settings: defaultSettings(),
     t1: [emptyPerson()],
     t2: [emptyPerson()],
     t2b: [emptyPerson()],
@@ -431,11 +933,12 @@ function loadState() {
     if (snap.metadata.hasPendingWrites) return; // bỏ qua tiếng vọng của chính lần ghi của mình
     if (!snap.exists) {
       // Chưa có dữ liệu trên đám mây -> khởi tạo bằng dữ liệu mặc định
-      docRef.set({ state: defaultState(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      docRef.set({ state: defaultState(), editHistory: [], updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       return;
     }
     const data = snap.data();
     state = data.state || defaultState();
+    editHistory = Array.isArray(data.editHistory) ? data.editHistory : [];
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
     render();
     setStatus('Đã đồng bộ với đám mây · ' + new Date().toLocaleTimeString('vi-VN'));
@@ -444,12 +947,15 @@ function loadState() {
   });
 }
 
-function saveState() {
+function saveState(options = {}) {
   if (!editMode) return; // người chỉ xem không được ghi lên đám mây
+  const actionLabel = options.action || 'Cập nhật sơ đồ';
 
   if (!firebaseReady) {
     // Chế độ dự phòng: chỉ lưu trên máy này, giống bản gốc chưa nối đám mây
     try {
+      const entry = { name: currentEditorName || 'Ẩn danh', at: new Date().toISOString(), state: state, action: actionLabel };
+      editHistory = [entry, ...(Array.isArray(editHistory) ? editHistory : [])].slice(0, 20);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       setStatus('⚠️ Đã lưu tạm trên máy này (chưa có đám mây để đồng bộ cho người khác).');
     } catch (err) {
@@ -461,7 +967,10 @@ function saveState() {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try {
-      await docRef.set({ state, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      const entry = { name: currentEditorName || 'Ẩn danh', at: new Date().toISOString(), state: state, action: actionLabel };
+      const newHistory = [entry, ...(Array.isArray(editHistory) ? editHistory : [])].slice(0, 20);
+      await docRef.set({ state, editHistory: newHistory, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+      editHistory = newHistory;
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       setStatus('Đã lưu lên đám mây · ' + new Date().toLocaleTimeString('vi-VN'));
     } catch (err) {
@@ -470,20 +979,43 @@ function saveState() {
   }, 300);
 }
 
+// Phát hiệu ứng "biến mất" cho một thẻ/khối trước khi thật sự xóa khỏi dữ liệu.
+// Giúp việc xóa nhân sự trông mượt mà thay vì biến mất đột ngột.
+function removeWithAnimation(el, applyStateChange) {
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!el || prefersReduced) { applyStateChange(); return; }
+  let done = false;
+  const finish = () => { if (done) return; done = true; applyStateChange(); };
+  el.classList.add('is-leaving');
+  el.addEventListener('transitionend', finish, { once: true });
+  setTimeout(finish, 200); // dự phòng nếu transitionend không bắn ra (VD phần tử bị ẩn)
+}
+
 function userIcon() {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>';
 }
 
 function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
+  ensurePersonProfile(person);
   const card = document.createElement('div');
   card.className = 'card';
   if (tierTitle !== T4.title) card.classList.add('executive-card');
+  card.dataset.personSearch = personSearchText(person, tierTitle);
+  card.dataset.personGroup = tierTitle === T4.title ? 'manager' : 'executive';
 
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove';
   removeBtn.setAttribute('aria-label', 'Xóa vị trí này');
   removeBtn.textContent = '✕';
   removeBtn.onclick = onRemove;
+
+  const profileBtn = document.createElement('button');
+  profileBtn.className = 'profile-btn';
+  profileBtn.type = 'button';
+  profileBtn.title = 'Xem hồ sơ';
+  profileBtn.setAttribute('aria-label', 'Xem hồ sơ');
+  profileBtn.textContent = 'i';
+  profileBtn.onclick = (event) => { event.stopPropagation(); openProfile(person); };
 
   const avatar = document.createElement('div');
   avatar.className = 'avatar';
@@ -495,6 +1027,8 @@ function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
     avatar.style.borderColor = accentColor;
     avatar.style.color = accentColor;
     avatar.style.background = hexToRgba(accentColor, 0.12);
+    card.style.setProperty('--card-accent', accentColor);
+    card.style.setProperty('--card-accent-soft', hexToRgba(accentColor, 0.12));
   }
 
   const nameInput = document.createElement('input');
@@ -503,17 +1037,81 @@ function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
   nameInput.placeholder = 'Nhập tên';
   nameInput.value = person.name;
   nameInput.oninput = (e) => { person.name = e.target.value; };
-  nameInput.onblur = () => saveState();
+  nameInput.onblur = () => saveState({ action: 'Sửa tên: ' + (person.name || '(trống)') });
 
   const roleLabel = document.createElement('div');
   roleLabel.className = 'role-label';
   roleLabel.textContent = tierTitle;
 
+  const titleLabel = document.createElement('div');
+  titleLabel.className = 'person-title';
+  titleLabel.textContent = person.title || '';
+
+  card.appendChild(profileBtn);
   card.appendChild(removeBtn);
   card.appendChild(avatar);
   card.appendChild(nameInput);
+  card.appendChild(titleLabel);
   card.appendChild(roleLabel);
   return card;
+}
+
+function startDrag(event, payload, el) {
+  if (!editMode) { event.preventDefault(); return; }
+  dragPayload = payload;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', payload.kind);
+  el.classList.add('is-dragging');
+}
+
+function finishDrag(el) {
+  dragPayload = null;
+  document.querySelectorAll('.is-drop-target').forEach(target => target.classList.remove('is-drop-target'));
+  el.classList.remove('is-dragging');
+}
+
+function makeFlatCardDraggable(card, tierId, index) {
+  card.draggable = true;
+  card.addEventListener('dragstart', (event) => startDrag(event, { kind: 'flat', tierId, index }, card));
+  card.addEventListener('dragend', () => finishDrag(card));
+  card.addEventListener('dragover', (event) => {
+    if (editMode && dragPayload?.kind === 'flat' && dragPayload.tierId === tierId) {
+      event.preventDefault();
+      card.classList.add('is-drop-target');
+    }
+  });
+  card.addEventListener('dragleave', () => card.classList.remove('is-drop-target'));
+  card.addEventListener('drop', (event) => {
+    event.preventDefault();
+    card.classList.remove('is-drop-target');
+    if (!dragPayload || dragPayload.kind !== 'flat' || dragPayload.tierId !== tierId || dragPayload.index === index) return;
+    const list = state[tierId];
+    const [person] = list.splice(dragPayload.index, 1);
+    list.splice(dragPayload.index < index ? index - 1 : index, 0, person);
+    render();
+    saveState({ action: 'Sắp xếp lại thứ tự nhân sự (kéo thả)' });
+  });
+}
+
+function makeTeamRowDraggable(row, managerIndex, teamKey, index) {
+  row.draggable = true;
+  row.addEventListener('dragstart', (event) => startDrag(event, { kind: 'team', managerIndex, teamKey, index }, row));
+  row.addEventListener('dragend', () => finishDrag(row));
+}
+
+function moveTeamPerson(targetTeam, targetKey, targetIndex) {
+  if (!dragPayload || dragPayload.kind !== 'team') return;
+  const sourceManager = state.t4[dragPayload.managerIndex];
+  if (!sourceManager || !sourceManager.team) return;
+  const sourceList = sourceManager.team[dragPayload.teamKey];
+  const sourceIndex = dragPayload.index;
+  if (!sourceList || !sourceList[sourceIndex]) return;
+  let insertAt = targetIndex;
+  if (sourceList === targetTeam[targetKey] && sourceIndex < insertAt) insertAt--;
+  const [person] = sourceList.splice(sourceIndex, 1);
+  targetTeam[targetKey].splice(Math.max(0, insertAt), 0, person);
+  render();
+  saveState({ action: 'Di chuyển nhân sự giữa các nhóm (kéo thả)' });
 }
 
 function bindAvatarClick(person) {
@@ -524,6 +1122,7 @@ function bindAvatarClick(person) {
 }
 
 function render() {
+  applyOrgSettings();
   const root = document.getElementById('org-root');
   root.innerHTML = '';
 
@@ -556,11 +1155,12 @@ function render() {
   document.getElementById('add-t4').onclick = () => {
     state.t4.push(emptyTrungCap());
     render();
-    saveState();
+    saveState({ action: 'Thêm quản lý trung cấp mới' });
   };
 
   applyLayoutOrientation();
   applyZoom();
+  applySearchFilter();
   drawAllConnectors();
   lockFieldsIfNeeded();
   updateLockUI();
@@ -570,7 +1170,7 @@ function render() {
 function lockFieldsIfNeeded() {
   const root = document.getElementById('org-root');
   root.querySelectorAll('input').forEach((el) => { el.disabled = !editMode; });
-  root.querySelectorAll('button').forEach((el) => { el.disabled = !editMode; });
+  root.querySelectorAll('button:not(.profile-btn):not(.group-collapse)').forEach((el) => { el.disabled = !editMode; });
 }
 
 function buildFlatTierColumn(tier, list) {
@@ -593,14 +1193,17 @@ function buildFlatTierColumn(tier, list) {
       person,
       tier.title,
       () => {
-        state[tier.id].splice(pIdx, 1);
-        if (state[tier.id].length === 0) state[tier.id].push(emptyPerson());
-        render();
-        saveState();
+        removeWithAnimation(card, () => {
+          state[tier.id].splice(pIdx, 1);
+          if (state[tier.id].length === 0) state[tier.id].push(emptyPerson());
+          render();
+          saveState({ action: 'Xóa nhân sự: ' + (person.name || '(trống)') });
+        });
       },
       bindAvatarClick(person),
       tier.accent
     );
+    makeFlatCardDraggable(card, tier.id, pIdx);
     row.appendChild(card);
   });
 
@@ -609,7 +1212,7 @@ function buildFlatTierColumn(tier, list) {
   col.querySelector('[data-add-flat]').onclick = () => {
     state[tier.id].push(emptyPerson());
     render();
-    saveState();
+    saveState({ action: 'Thêm nhân sự mới vào ' + tier.title });
   };
 
   return col;
@@ -631,15 +1234,33 @@ function buildTrungCapGroup(manager, i) {
   removeGroupBtn.setAttribute('aria-label', 'Xóa quản lý trung cấp này');
   removeGroupBtn.textContent = '✕';
   removeGroupBtn.onclick = () => {
-    state.t4.splice(i, 1);
-    if (state.t4.length === 0) state.t4.push(emptyTrungCap());
-    render();
-    saveState();
+    removeWithAnimation(block, () => {
+      state.t4.splice(i, 1);
+      if (state.t4.length === 0) state.t4.push(emptyTrungCap());
+      render();
+      saveState({ action: 'Xóa bộ phận: ' + (manager.dept || '(chưa đặt tên)') });
+    });
   };
   block.appendChild(removeGroupBtn);
-  block.style.background = hexToRgba(T4.accent, 0.06);
-  block.style.borderColor = hexToRgba(T4.accent, 0.4);
-  block.style.borderStyle = 'solid';
+
+  const collapseBtn = document.createElement('button');
+  collapseBtn.className = 'group-collapse';
+  collapseBtn.type = 'button';
+  collapseBtn.textContent = manager.collapsed ? 'Mở rộng' : 'Thu gọn';
+  collapseBtn.setAttribute('aria-label', collapseBtn.textContent + ' bộ phận');
+  collapseBtn.onclick = () => {
+    manager.collapsed = !manager.collapsed;
+    render();
+    saveState({ action: (manager.collapsed ? 'Thu gọn' : 'Mở rộng') + ' bộ phận: ' + (manager.dept || '(chưa đặt tên)') });
+  };
+  block.appendChild(collapseBtn);
+  const deptAccent = manager.deptColor || T4.accent;
+  block.style.borderLeftColor = deptAccent;
+  block.style.setProperty('--card-accent', deptAccent);
+  block.style.setProperty('--card-accent-soft', hexToRgba(deptAccent, 0.12));
+
+  const headerRow = document.createElement('div');
+  headerRow.className = 'group-header-row';
 
   const deptInput = document.createElement('input');
   deptInput.className = 'dept-input';
@@ -647,8 +1268,19 @@ function buildTrungCapGroup(manager, i) {
   deptInput.placeholder = 'Tên bộ phận (VD: Kinh doanh, Kỹ thuật...)';
   deptInput.value = manager.dept || '';
   deptInput.oninput = (e) => { manager.dept = e.target.value; };
-  deptInput.onblur = () => saveState();
-  block.appendChild(deptInput);
+  deptInput.onblur = () => saveState({ action: 'Sửa tên bộ phận: ' + (manager.dept || '(trống)') });
+  headerRow.appendChild(deptInput);
+
+  const deptColorInput = document.createElement('input');
+  deptColorInput.className = 'dept-color-input';
+  deptColorInput.type = 'color';
+  deptColorInput.title = 'Màu riêng cho bộ phận này';
+  deptColorInput.value = deptAccent;
+  deptColorInput.oninput = (e) => { manager.deptColor = e.target.value; };
+  deptColorInput.onchange = () => { render(); saveState({ action: 'Đổi màu bộ phận: ' + (manager.dept || '(chưa đặt tên)') }); };
+  headerRow.appendChild(deptColorInput);
+
+  block.appendChild(headerRow);
 
   const body = document.createElement('div');
   body.className = 'group-body';
@@ -657,11 +1289,13 @@ function buildTrungCapGroup(manager, i) {
   groupCol.className = 'group-col';
 
   const card = createCard(manager, T4.title, () => {
-    state.t4.splice(i, 1);
-    if (state.t4.length === 0) state.t4.push(emptyTrungCap());
-    render();
-    saveState();
-  }, bindAvatarClick(manager), T4.accent);
+    removeWithAnimation(block, () => {
+      state.t4.splice(i, 1);
+      if (state.t4.length === 0) state.t4.push(emptyTrungCap());
+      render();
+      saveState({ action: 'Xóa quản lý trung cấp: ' + (manager.name || '(trống)') });
+    });
+  }, bindAvatarClick(manager), deptAccent);
   card.id = 'card-t4-' + i;
   groupCol.appendChild(card);
   body.appendChild(groupCol);
@@ -671,16 +1305,22 @@ function buildTrungCapGroup(manager, i) {
   body.appendChild(line);
 
   manager.team = manager.team || emptyTeam();
-  body.appendChild(buildTeamTable(manager.team));
+  body.appendChild(buildTeamTable(manager.team, i, deptAccent));
+
+  if (manager.collapsed) body.style.display = 'none';
 
   block.appendChild(body);
 
   return block;
 }
 
-function buildTeamRow(team, col, person, idx) {
+function buildTeamRow(team, col, person, idx, managerIndex, accentColor) {
+  const accent = accentColor || T4.accent;
+  ensurePersonProfile(person);
   const rowDiv = document.createElement('div');
   rowDiv.className = 'team-row';
+  rowDiv.dataset.personSearch = personSearchText(person, col.title);
+  rowDiv.dataset.personGroup = col.key === 't6' ? 'deputy' : 'staff';
 
   const avatarSm = document.createElement('div');
   avatarSm.className = 'avatar-sm';
@@ -688,30 +1328,56 @@ function buildTeamRow(team, col, person, idx) {
   avatarSm.innerHTML = person.photo ? '<img src="' + person.photo + '" alt="Ảnh đại diện">' : userIcon();
   avatarSm.onclick = bindAvatarClick(person);
   avatarSm.style.borderStyle = 'solid';
-  avatarSm.style.borderColor = T4.accent;
-  avatarSm.style.color = T4.accent;
-  avatarSm.style.background = hexToRgba(T4.accent, 0.12);
+  avatarSm.style.borderColor = accent;
+  avatarSm.style.color = accent;
+  avatarSm.style.background = hexToRgba(accent, 0.12);
 
   const input = document.createElement('input');
   input.type = 'text';
   input.placeholder = 'Tên';
   input.value = person.name;
   input.oninput = (e) => { person.name = e.target.value; };
-  input.onblur = () => saveState();
+  input.onblur = () => saveState({ action: 'Sửa tên nhân viên trong nhóm: ' + (person.name || '(trống)') });
 
   const removeBtn = document.createElement('button');
+  removeBtn.className = 'remove-person';
   removeBtn.setAttribute('aria-label', 'Xóa');
   removeBtn.textContent = '✕';
   removeBtn.onclick = () => {
-    team[col.key].splice(idx, 1);
-    if (team[col.key].length === 0) team[col.key].push(emptyPerson());
-    render();
-    saveState();
+    removeWithAnimation(rowDiv, () => {
+      team[col.key].splice(idx, 1);
+      if (team[col.key].length === 0) team[col.key].push(emptyPerson());
+      render();
+      saveState({ action: 'Xóa nhân viên trong nhóm: ' + (person.name || '(trống)') });
+    });
   };
 
   rowDiv.appendChild(avatarSm);
   rowDiv.appendChild(input);
+  const profileBtn = document.createElement('button');
+  profileBtn.className = 'profile-btn';
+  profileBtn.type = 'button';
+  profileBtn.title = 'Xem hồ sơ';
+  profileBtn.setAttribute('aria-label', 'Xem hồ sơ');
+  profileBtn.textContent = 'i';
+  profileBtn.onclick = (event) => { event.stopPropagation(); openProfile(person); };
+  rowDiv.appendChild(profileBtn);
   rowDiv.appendChild(removeBtn);
+  makeTeamRowDraggable(rowDiv, managerIndex, col.key, idx);
+  rowDiv.addEventListener('dragover', (event) => {
+    if (editMode && dragPayload?.kind === 'team') {
+      event.preventDefault();
+      event.stopPropagation();
+      rowDiv.classList.add('is-drop-target');
+    }
+  });
+  rowDiv.addEventListener('dragleave', () => rowDiv.classList.remove('is-drop-target'));
+  rowDiv.addEventListener('drop', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    rowDiv.classList.remove('is-drop-target');
+    moveTeamPerson(team, col.key, idx);
+  });
   return rowDiv;
 }
 
@@ -722,14 +1388,15 @@ function buildTeamAddButton(team, col) {
   addBtn.onclick = () => {
     team[col.key].push(emptyPerson());
     render();
-    saveState();
+    saveState({ action: 'Thêm nhân viên vào nhóm ' + col.title });
   };
   return addBtn;
 }
 
 const TEAM_CHUNK_SIZE = 5;
 
-function buildTeamTable(team) {
+function buildTeamTable(team, managerIndex, accentColor) {
+  const accent = accentColor || T4.accent;
   const table = document.createElement('div');
   table.className = 'team-table';
 
@@ -743,11 +1410,25 @@ function buildTeamTable(team) {
     const header = document.createElement('div');
     header.className = 'team-col-header';
     header.textContent = col.title;
-    header.style.color = T4.accent;
+    header.style.color = accent;
     colDiv.appendChild(header);
 
     const body = document.createElement('div');
     body.className = 'team-col-body';
+    body.addEventListener('dragover', (event) => {
+      if (editMode && dragPayload?.kind === 'team') {
+        event.preventDefault();
+        body.classList.add('is-drop-target');
+      }
+    });
+    body.addEventListener('dragleave', (event) => {
+      if (!body.contains(event.relatedTarget)) body.classList.remove('is-drop-target');
+    });
+    body.addEventListener('drop', (event) => {
+      event.preventDefault();
+      body.classList.remove('is-drop-target');
+      moveTeamPerson(team, col.key, team[col.key].length);
+    });
 
     const numChunks = Math.max(1, Math.ceil(list.length / TEAM_CHUNK_SIZE));
     for (let c = 0; c < numChunks; c++) {
@@ -757,7 +1438,7 @@ function buildTeamTable(team) {
       chunkDiv.className = 'team-col-chunk';
 
       chunkItems.forEach((person, k) => {
-        chunkDiv.appendChild(buildTeamRow(team, col, person, start + k));
+        chunkDiv.appendChild(buildTeamRow(team, col, person, start + k, managerIndex, accent));
       });
 
       // Chỉ đặt nút "+" vào cột con này nếu nó chưa đủ 5 người (còn chỗ trống)
@@ -785,6 +1466,7 @@ function buildTeamTable(team) {
 
 function drawBranchFromEl(connectorEl, parentEl, childEls) {
   if (!connectorEl || !parentEl || childEls.length === 0) return;
+  if (!parentEl.querySelector('.card:not(.is-filtered-out)')) return;
   if (layoutOrientation === 'vertical') {
     drawVerticalBranchFromEl(connectorEl, parentEl, childEls);
     return;
@@ -851,25 +1533,26 @@ function drawVerticalBranchFromEl(connectorEl, parentEl, childEls) {
 }
 
 function drawAllConnectors() {
+  document.querySelectorAll('.connector').forEach((connector) => { connector.innerHTML = ''; });
   drawBranchFromEl(
     document.getElementById('connector-t1'),
     document.getElementById('row-t1'),
-    Array.from(document.getElementById('row-t2').querySelectorAll('.card'))
+    Array.from(document.getElementById('row-t2').querySelectorAll('.card:not(.is-filtered-out)'))
   );
   drawBranchFromEl(
     document.getElementById('connector-t2'),
     document.getElementById('row-t2'),
-    Array.from(document.getElementById('row-t2b').querySelectorAll('.card'))
+    Array.from(document.getElementById('row-t2b').querySelectorAll('.card:not(.is-filtered-out)'))
   );
   drawBranchFromEl(
     document.getElementById('connector-t2b'),
     document.getElementById('row-t2b'),
-    Array.from(document.getElementById('row-t3').querySelectorAll('.card'))
+    Array.from(document.getElementById('row-t3').querySelectorAll('.card:not(.is-filtered-out)'))
   );
   drawBranchFromEl(
     document.getElementById('connector-t3'),
     document.getElementById('row-t3'),
-    Array.from(document.getElementById('row-t4').querySelectorAll('.card'))
+    Array.from(document.getElementById('row-t4').querySelectorAll('.group-block:not(.is-filtered-out)'))
   );
 }
 
@@ -896,7 +1579,182 @@ document.getElementById('zoom-reset').onclick = () => {
   drawAllConnectors();
 };
 
+// ---- Zoom bằng cử chỉ chụm 2 ngón tay trên điện thoại/máy tính bảng ----
+(function setupPinchZoom() {
+  const viewport = document.querySelector('.viewport');
+  if (!viewport) return;
+  let pinchStartDist = null;
+  let pinchStartZoom = 1;
+
+  function touchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  viewport.addEventListener('touchstart', (event) => {
+    if (event.touches.length === 2) {
+      pinchStartDist = touchDistance(event.touches);
+      pinchStartZoom = zoomLevel;
+    }
+  }, { passive: true });
+
+  viewport.addEventListener('touchmove', (event) => {
+    if (event.touches.length === 2 && pinchStartDist) {
+      event.preventDefault(); // chặn trình duyệt zoom cả trang, chỉ zoom sơ đồ
+      const scale = touchDistance(event.touches) / pinchStartDist;
+      zoomLevel = Math.max(0.4, Math.min(2, Math.round(pinchStartZoom * scale * 20) / 20));
+      applyZoom();
+    }
+  }, { passive: false });
+
+  function endPinch(event) {
+    if (event.touches.length < 2 && pinchStartDist) {
+      pinchStartDist = null;
+      drawAllConnectors();
+    }
+  }
+  viewport.addEventListener('touchend', endPinch);
+  viewport.addEventListener('touchcancel', endPinch);
+})();
+
+// ---- Zoom bằng Ctrl/Cmd + cuộn chuột (hoặc chụm 2 ngón trên trackpad) trên máy tính, không cần ấn nút ----
+(function setupWheelZoom() {
+  const viewport = document.querySelector('.viewport');
+  if (!viewport) return;
+  let wheelZoomTimer = null;
+
+  viewport.addEventListener('wheel', (event) => {
+    // Chỉ zoom khi giữ Ctrl (Windows/Linux) hoặc Cmd (Mac), hoặc khi trình duyệt
+    // báo đây là cử chỉ chụm trên trackpad (ctrlKey tự động = true trong trường hợp đó).
+    if (!(event.ctrlKey || event.metaKey)) return;
+    event.preventDefault(); // chặn trình duyệt zoom cả trang, chỉ zoom sơ đồ
+
+    const step = event.deltaY < 0 ? 0.1 : -0.1;
+    zoomLevel = Math.max(0.4, Math.min(2, Math.round((zoomLevel + step) * 10) / 10));
+    applyZoom();
+
+    clearTimeout(wheelZoomTimer);
+    wheelZoomTimer = setTimeout(drawAllConnectors, 120);
+  }, { passive: false });
+})();
+
 document.getElementById('btn-toggle-layout').onclick = toggleLayoutOrientation;
+document.getElementById('btn-customize').onclick = guardEdit(openSettings);
+
+function cleanShareUrl() {
+  return window.location.origin + window.location.pathname + window.location.search;
+}
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    prompt('Sao chép link này để chia sẻ:', text);
+    return false;
+  }
+}
+
+document.getElementById('btn-copy-link').onclick = async () => {
+  const ok = await copyTextToClipboard(cleanShareUrl());
+  if (ok) setStatus('Đã sao chép link chỉ xem — người nhận không sửa được.');
+};
+
+document.getElementById('btn-copy-edit-link').onclick = async () => {
+  const pass = prompt('Nhập mật khẩu chỉnh sửa để tạo link mời chỉnh sửa:');
+  if (pass === null || pass === '') return;
+  const ok = await checkEditPassword(pass);
+  if (!ok) { alert('Sai mật khẩu.'); return; }
+  const link = cleanShareUrl() + '#edit=' + encodeURIComponent(pass);
+  const copied = await copyTextToClipboard(link);
+  if (copied) setStatus('Đã sao chép link chỉnh sửa — chỉ gửi cho người bạn tin tưởng.');
+};
+
+// ---- Thu gọn / mở tất cả bộ phận — giúp xem từng nhánh dễ hơn trên điện thoại ----
+function setAllGroupsCollapsed(collapsed) {
+  (state.t4 || []).forEach((manager) => { manager.collapsed = collapsed; });
+  render();
+  saveState({ action: collapsed ? 'Thu gọn tất cả bộ phận' : 'Mở rộng tất cả bộ phận' });
+}
+document.getElementById('btn-collapse-all').onclick = () => setAllGroupsCollapsed(true);
+document.getElementById('btn-expand-all').onclick = () => setAllGroupsCollapsed(false);
+
+// ---- Menu "Thêm" gọn cho điện thoại ----
+document.getElementById('btn-toggle-more').onclick = () => {
+  const toolbar = document.querySelector('.toolbar');
+  const isOpen = toolbar.classList.toggle('show-more');
+  document.getElementById('btn-toggle-more').textContent = isOpen ? '⋯ Ẩn bớt' : '⋯ Thêm';
+};
+
+// ---- Lịch sử chỉnh sửa: xem ai vừa sửa và lúc nào ----
+const historyModal = document.createElement('div');
+historyModal.className = 'profile-modal';
+historyModal.innerHTML =
+  '<div class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="history-heading">' +
+    '<h2 id="history-heading">Lịch sử chỉnh sửa</h2>' +
+    '<ul class="history-list" id="history-list"></ul>' +
+    '<p class="share-note">Ghi lại tên người chỉnh sửa, thời điểm lưu, và toàn bộ dữ liệu tại thời điểm đó. Bấm "Khôi phục" để đưa sơ đồ về đúng phiên bản của dòng đó.</p>' +
+    '<div class="profile-actions"><button type="button" class="close-history">Đóng</button></div>' +
+  '</div>';
+document.body.appendChild(historyModal);
+historyModal.querySelector('.close-history').onclick = () => historyModal.classList.remove('is-open');
+historyModal.addEventListener('click', (event) => { if (event.target === historyModal) historyModal.classList.remove('is-open'); });
+
+function formatHistoryTime(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+  } catch (err) { return ''; }
+}
+
+function openHistory() {
+  const list = historyModal.querySelector('#history-list');
+  if (!editHistory || editHistory.length === 0) {
+    list.innerHTML = '<li class="history-empty">Chưa có lịch sử chỉnh sửa nào.</li>';
+  } else {
+    list.innerHTML = editHistory.map((entry, idx) =>
+      '<li>' +
+        '<div class="history-info">' +
+          '<span class="history-name">' + (entry.name || 'Ẩn danh') + '</span>' +
+          '<span class="history-action">' + (entry.action || 'Cập nhật sơ đồ') + '</span>' +
+          '<span class="history-time">' + formatHistoryTime(entry.at) + '</span>' +
+        '</div>' +
+        (entry.state ?
+          '<button type="button" class="history-restore-btn" data-idx="' + idx + '" ' + (editMode ? '' : 'disabled title="Bật chế độ chỉnh sửa để khôi phục"') + '>Khôi phục</button>'
+          : '<span class="history-time">(không có bản lưu)</span>') +
+      '</li>'
+    ).join('');
+    list.querySelectorAll('.history-restore-btn').forEach((btn) => {
+      btn.onclick = () => restoreHistoryEntry(parseInt(btn.dataset.idx, 10));
+    });
+  }
+  historyModal.classList.add('is-open');
+}
+document.getElementById('btn-history').onclick = openHistory;
+
+function restoreHistoryEntry(idx) {
+  const entry = editHistory && editHistory[idx];
+  if (!entry || !entry.state) return;
+  if (!editMode) { setStatus('Cần bật chế độ chỉnh sửa để khôi phục.'); return; }
+  const ok = confirm('Khôi phục sơ đồ về đúng phiên bản lúc ' + formatHistoryTime(entry.at) + ' (bởi ' + (entry.name || 'Ẩn danh') + ')? Thay đổi hiện tại sẽ được lưu thành một mốc lịch sử mới, không bị mất hẳn.');
+  if (!ok) return;
+  state = JSON.parse(JSON.stringify(entry.state));
+  render();
+  saveState({ action: 'Khôi phục về phiên bản lúc ' + formatHistoryTime(entry.at) });
+  historyModal.classList.remove('is-open');
+  setStatus('Đã khôi phục về phiên bản lúc ' + formatHistoryTime(entry.at) + '.');
+}
+
+document.getElementById('search-input').oninput = (event) => {
+  searchQuery = event.target.value;
+  applySearchFilter();
+  drawAllConnectors();
+};
+document.getElementById('filter-select').onchange = (event) => {
+  roleFilter = event.target.value;
+  applySearchFilter();
+  drawAllConnectors();
+};
 
 const avatarFileInput = document.createElement('input');
 avatarFileInput.type = 'file';
@@ -910,7 +1768,7 @@ avatarFileInput.onchange = (e) => {
   reader.onload = () => {
     pendingAvatarTarget.photo = reader.result;
     render();
-    saveState();
+    saveState({ action: 'Đổi ảnh đại diện: ' + (pendingAvatarTarget.name || '(trống)') });
   };
   reader.readAsDataURL(file);
   avatarFileInput.value = '';
@@ -921,7 +1779,7 @@ document.getElementById('btn-reset').onclick = guardEdit(() => {
   if (confirm('Xóa hết dữ liệu sơ đồ hiện tại?')) {
     state = defaultState();
     render();
-    saveState();
+    saveState({ action: 'Xóa hết dữ liệu, làm lại từ đầu' });
   }
 });
 
@@ -944,6 +1802,7 @@ document.getElementById('btn-download-image').onclick = async () => {
   // Bỏ hiệu ứng thu phóng trên bản sao để ảnh luôn xuất ở kích thước gốc 100%
   // (không đụng tới zoom của trang đang xem, nên trang chính không bị nháy zoom)
   clone.style.transform = 'none';
+  clone.querySelectorAll('.remove, .profile-btn, .tier-add, .add-mini, .group-remove').forEach((el) => { el.style.display = 'none'; });
 
   const holder = document.createElement('div');
   holder.style.position = 'fixed';
@@ -980,6 +1839,159 @@ document.getElementById('btn-download-image').onclick = async () => {
   }
 };
 
+document.getElementById('btn-download-pdf').onclick = async () => {
+  if (!window.jspdf?.jsPDF) { alert('Chưa tải được thư viện PDF. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
+  const btn = document.getElementById('btn-download-pdf');
+  const progress = document.getElementById('img-progress');
+  btn.disabled = true;
+  progress.textContent = 'Đang tạo PDF...';
+
+  const liveRoot = document.getElementById('org-root');
+  const clone = liveRoot.cloneNode(true);
+  liveRoot.querySelectorAll('input').forEach((el, index) => {
+    const cloneInput = clone.querySelectorAll('input')[index];
+    if (cloneInput) cloneInput.setAttribute('value', el.value);
+  });
+  clone.style.transform = 'none';
+  clone.querySelectorAll('.remove, .profile-btn, .tier-add, .add-mini, .group-remove').forEach((el) => { el.style.display = 'none'; });
+
+  const holder = document.createElement('div');
+  holder.style.cssText = 'position:fixed;top:0;left:-99999px;background:#fff;padding:28px;';
+  holder.appendChild(clone);
+  document.body.appendChild(holder);
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+  try {
+    const canvas = await html2canvas(holder, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+      unit: 'px', format: [canvas.width, canvas.height], hotfixes: ['px_scaling']
+    });
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, canvas.width, canvas.height);
+    pdf.save('so-do-phan-cap-' + (layoutOrientation === 'vertical' ? 'doc' : 'ngang') + '.pdf');
+    progress.textContent = 'Đã tải PDF về máy.';
+  } catch (err) {
+    progress.textContent = 'Không tạo được PDF: ' + err.message;
+  } finally {
+    document.body.removeChild(holder);
+    btn.disabled = false;
+    setTimeout(() => { progress.textContent = ''; }, 4000);
+  }
+};
+
+function spreadsheetRow(level, person, dept = '', managerName = '') {
+  ensurePersonProfile(person);
+  return {
+    'Cấp': level,
+    'Phòng ban': dept,
+    'Quản lý': managerName,
+    'Tên': person.name || '',
+    'Chức danh chi tiết': person.title || '',
+    'Điện thoại': person.phone || '',
+    'Email': person.email || '',
+    'Ghi chú': person.note || ''
+  };
+}
+
+function exportExcel() {
+  if (!window.XLSX) { alert('Chưa tải được thư viện Excel. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
+  const rows = [];
+  FLAT_TIERS_TOP.forEach((tier) => state[tier.id].forEach((person) => rows.push(spreadsheetRow(tier.title, person))));
+  state.t4.forEach((manager) => {
+    rows.push(spreadsheetRow(T4.title, manager, manager.dept || ''));
+    const managerName = manager.name || '';
+    TEAM_COLS.forEach((col) => (manager.team?.[col.key] || []).forEach((person) => {
+      rows.push(spreadsheetRow(col.title, person, manager.dept || '', managerName));
+    }));
+  });
+  const sheet = XLSX.utils.json_to_sheet(rows);
+  sheet['!cols'] = [{ wch: 20 }, { wch: 22 }, { wch: 22 }, { wch: 24 }, { wch: 28 }, { wch: 16 }, { wch: 28 }, { wch: 36 }];
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, 'Sơ đồ nhân sự');
+  XLSX.writeFile(workbook, 'so-do-phan-cap.xlsx');
+}
+
+function personFromSpreadsheetRow(row) {
+  return {
+    name: String(row['Tên'] || '').trim(), photo: null,
+    title: String(row['Chức danh chi tiết'] || '').trim(),
+    phone: String(row['Điện thoại'] || '').trim(),
+    email: String(row['Email'] || '').trim(),
+    note: String(row['Ghi chú'] || '').trim()
+  };
+}
+
+function importExcelRows(rows) {
+  const imported = defaultState();
+  FLAT_TIERS_TOP.forEach((tier) => { imported[tier.id] = []; });
+  imported.t4 = [];
+  const managerMap = new Map();
+  const getManager = (dept, managerName) => {
+    const key = (dept + '|' + managerName).toLocaleLowerCase('vi-VN');
+    if (!managerMap.has(key)) {
+      const manager = { ...emptyPerson(), name: managerName, dept, team: { t6: [], t7: [] } };
+      managerMap.set(key, manager);
+      imported.t4.push(manager);
+    }
+    return managerMap.get(key);
+  };
+
+  rows.forEach((row) => {
+    const level = String(row['Cấp'] || '').trim();
+    const person = personFromSpreadsheetRow(row);
+    const dept = String(row['Phòng ban'] || '').trim();
+    const managerName = String(row['Quản lý'] || '').trim();
+    const tier = FLAT_TIERS_TOP.find((item) => item.title.toLocaleLowerCase('vi-VN') === level.toLocaleLowerCase('vi-VN'));
+    if (tier) { imported[tier.id].push(person); return; }
+    if (level === T4.title) {
+      const key = (dept + '|' + person.name).toLocaleLowerCase('vi-VN');
+      const existingManager = managerMap.get(key);
+      if (existingManager) {
+        Object.assign(existingManager, person, { dept });
+      } else {
+        const manager = { ...person, dept, team: { t6: [], t7: [] } };
+        managerMap.set(key, manager);
+        imported.t4.push(manager);
+      }
+      return;
+    }
+    const teamCol = TEAM_COLS.find((item) => item.title.toLocaleLowerCase('vi-VN') === level.toLocaleLowerCase('vi-VN'));
+    if (teamCol) getManager(dept, managerName).team[teamCol.key].push(person);
+  });
+
+  FLAT_TIERS_TOP.forEach((tier) => { if (imported[tier.id].length === 0) imported[tier.id].push(emptyPerson()); });
+  if (imported.t4.length === 0) imported.t4.push(emptyTrungCap());
+  imported.t4.forEach((manager) => {
+    TEAM_COLS.forEach((col) => { if (!manager.team[col.key].length) manager.team[col.key].push(emptyPerson()); });
+  });
+  state = imported;
+  render();
+  saveState({ action: 'Nhập dữ liệu từ tệp Excel' });
+  setStatus('Đã nhập dữ liệu từ Excel. Ảnh đại diện không có trong tệp Excel nên cần thêm lại nếu cần.');
+}
+
+document.getElementById('btn-export-xlsx').onclick = exportExcel;
+document.getElementById('btn-import-xlsx').onclick = guardEdit(() => document.getElementById('file-input-xlsx').click());
+document.getElementById('file-input-xlsx').onchange = (event) => {
+  if (!editMode) { event.target.value = ''; return; }
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      if (!window.XLSX) throw new Error('Không tải được thư viện Excel');
+      const workbook = XLSX.read(reader.result, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      importExcelRows(XLSX.utils.sheet_to_json(sheet, { defval: '' }));
+    } catch (err) {
+      alert('Không đọc được tệp Excel. Hãy dùng tệp được xuất từ sơ đồ này hoặc kiểm tra lại cột dữ liệu.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+};
+
 document.getElementById('btn-export').onclick = () => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1003,7 +2015,7 @@ document.getElementById('file-input').onchange = (e) => {
     try {
       state = JSON.parse(reader.result);
       render();
-      saveState();
+      saveState({ action: 'Nhập dữ liệu từ tệp JSON' });
     } catch (err) {
       alert('File không hợp lệ.');
     }
@@ -1017,6 +2029,19 @@ window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(drawAllConnectors, 100);
 });
+
+// Tự động mở khóa chỉnh sửa nếu mở bằng "Link chỉnh sửa" (dạng #edit=mật_khẩu)
+async function tryAutoUnlockFromLink() {
+  const match = window.location.hash.match(/(?:^#|&)edit=([^&]+)/);
+  if (!match) return;
+  const pass = decodeURIComponent(match[1]);
+  // Xóa ngay khỏi thanh địa chỉ để không lộ mật khẩu khi chụp màn hình / chia sẻ lại
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  const ok = await checkEditPassword(pass);
+  if (ok) activateEditMode('link');
+  else setStatus('Link chỉnh sửa không hợp lệ hoặc đã hết hạn.');
+}
+tryAutoUnlockFromLink();
 
 loadState();
 </script>
