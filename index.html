@@ -569,11 +569,37 @@ function updateLockUI() {
   lockFieldsIfNeeded(); // bật/tắt lại toàn bộ ô nhập liệu và nút theo trạng thái mới nhất
 }
 
+function genPersonId() {
+  return 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+}
+
 function ensurePersonProfile(person) {
   ['title', 'phone', 'email', 'note'].forEach((key) => {
     if (typeof person[key] !== 'string') person[key] = '';
   });
+  // Mỗi người cần một ID cố định để tra cứu lại đúng người đó sau này (ví dụ khi
+  // đang mở hộp thoại chọn ảnh mà dữ liệu vừa được đồng bộ mới từ đám mây về —
+  // nếu chỉ giữ tham chiếu object cũ thì ảnh sẽ bị gán "lạc" vào dữ liệu cũ đã bị thay thế).
+  if (typeof person.id !== 'string' || !person.id) person.id = genPersonId();
   return person;
+}
+
+// Tìm đúng người (theo id) trong dữ liệu HIỆN TẠI (mới nhất) — dùng thay cho việc giữ
+// tham chiếu object trực tiếp, vì object có thể đã bị thay thế bởi dữ liệu đồng bộ mới.
+function findPersonById(id) {
+  if (!id || !state) return null;
+  for (const tier of FLAT_TIERS_TOP) {
+    const found = (state[tier.id] || []).find((p) => p.id === id);
+    if (found) return found;
+  }
+  for (const manager of state.t4 || []) {
+    if (manager.id === id) return manager;
+    for (const col of TEAM_COLS) {
+      const found = (manager.team && manager.team[col.key] || []).find((p) => p.id === id);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 function personSearchText(person, extra = '') {
@@ -1187,7 +1213,7 @@ function moveTeamPerson(targetTeam, targetKey, targetIndex) {
 
 function bindAvatarClick(person) {
   return () => {
-    pendingAvatarTarget = person;
+    pendingAvatarTarget = person.id;
     document.getElementById('file-input-avatar-trigger').click();
   };
 }
@@ -1855,12 +1881,21 @@ avatarFileInput.onchange = async (e) => {
   const file = e.target.files[0];
   if (!file || !pendingAvatarTarget) { avatarFileInput.value = ''; return; }
   try {
-    pendingAvatarTarget.photo = await compressImageFile(file, 320, 'image/jpeg', 0.85);
-    render();
-    saveState({ action: 'Đổi ảnh đại diện: ' + (pendingAvatarTarget.name || '(trống)') });
+    const compressed = await compressImageFile(file, 320, 'image/jpeg', 0.85);
+    // Tra lại người này trong dữ liệu MỚI NHẤT tại thời điểm ảnh xử lý xong — phòng trường
+    // hợp trong lúc người dùng đang chọn file, dữ liệu đã được đồng bộ mới từ đám mây về.
+    const target = findPersonById(pendingAvatarTarget);
+    if (!target) {
+      alert('Không tìm thấy người này trong dữ liệu hiện tại (có thể dữ liệu vừa được cập nhật). Vui lòng thử bấm lại vào ảnh đại diện và chọn ảnh lần nữa.');
+    } else {
+      target.photo = compressed;
+      render();
+      saveState({ action: 'Đổi ảnh đại diện: ' + (target.name || '(trống)') });
+    }
   } catch (err) {
     alert('Không xử lý được ảnh: ' + err.message);
   }
+  pendingAvatarTarget = null;
   avatarFileInput.value = '';
 };
 document.body.appendChild(avatarFileInput);
