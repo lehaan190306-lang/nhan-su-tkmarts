@@ -66,6 +66,11 @@
     display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative;
     background: var(--surface); flex-shrink: 0;
   }
+  /* Các vị trí điều hành cần nhiều chỗ hơn để tên dài không bị khuất. */
+  .card.executive-card { width: 200px; padding: 14px; }
+  .card.executive-card .avatar { width: 60px; height: 60px; }
+  .card.executive-card .name-input { height: 34px; font-size: 14px; }
+  .card.executive-card .role-label { font-size: 13px; }
   .card .remove {
     position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border: none;
     background: transparent; color: var(--text-muted); cursor: pointer; font-size: 15px;
@@ -97,6 +102,22 @@
   .add-mini:hover { background: rgba(0,0,0,0.03); }
 
   #org-root { display: flex; flex-direction: row; align-items: stretch; }
+
+  /* Bố cục dọc: mỗi cấp nằm trên/dưới cấp kế tiếp, vẫn giữ nguyên dữ liệu sơ đồ. */
+  #org-root.layout-vertical { flex-direction: column; align-items: stretch; min-width: max-content; }
+  #org-root.layout-vertical .tier-col { flex-direction: column; align-items: stretch; min-height: 0; }
+  #org-root.layout-vertical .tier-header {
+    width: auto; min-width: 0; padding: 10px 4px 2px; justify-content: center;
+  }
+  #org-root.layout-vertical .row {
+    flex-direction: row; align-items: center; justify-content: center;
+    gap: 12px; padding: 8px 4px 14px; min-height: 0;
+  }
+  #org-root.layout-vertical .connector { width: auto; height: 44px; min-height: 44px; align-self: stretch; }
+  #org-root.layout-vertical .groups-container {
+    flex-direction: row; justify-content: center; align-items: flex-start; gap: 18px; padding: 8px 4px 16px;
+  }
+  #org-root.layout-vertical .group-block { min-width: max-content; }
 
   .groups-container { display: flex; flex-direction: column; gap: 24px; padding: 6px 4px 16px; }
   .group-block {
@@ -195,11 +216,12 @@
 <body>
 <div class="wrap">
   <h1>Sơ đồ phân cấp nhân sự</h1>
-  <p class="sub">Sơ đồ phân nhánh theo chiều ngang: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây — ai có link đều xem được, chỉ người có mật khẩu mới chỉnh sửa được.</p>
+  <p class="sub">Sơ đồ có thể chuyển ngang/dọc: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây — ai có link đều xem được, chỉ người có mật khẩu mới chỉnh sửa được.</p>
 
   <div class="toolbar">
     <span class="lock-badge is-view" id="lock-badge">🔒 Đang xem</span>
     <button id="btn-toggle-edit">🔓 Mở khóa chỉnh sửa</button>
+    <button id="btn-toggle-layout" title="Đổi chiều hiển thị sơ đồ">↕ Chuyển sang dọc</button>
     <button id="btn-download-image">Tải ảnh về máy (.png)</button>
     <button id="btn-export">Xuất file (.json)</button>
     <button id="btn-import">Nhập file (.json)</button>
@@ -272,9 +294,11 @@ const TEAM_COLS = [
 const FLAT_TIERS_TOP = [T1, T2, T2B, T3];
 
 const STORAGE_KEY = 'org-chart-data-v6-cache'; // chỉ dùng làm bộ nhớ đệm hiển thị tạm thời khi đang tải từ đám mây
+const LAYOUT_STORAGE_KEY = 'org-chart-layout-orientation-v1';
 let state = null;
 let pendingAvatarTarget = null;
 let zoomLevel = 1;
+let layoutOrientation = localStorage.getItem(LAYOUT_STORAGE_KEY) === 'vertical' ? 'vertical' : 'horizontal';
 
 // ---- Phân quyền chỉnh sửa bằng mật khẩu ----
 let editMode = false;
@@ -367,6 +391,25 @@ function defaultState() {
 
 function setStatus(msg) { document.getElementById('status').textContent = msg; }
 
+function applyLayoutOrientation() {
+  const root = document.getElementById('org-root');
+  const isVertical = layoutOrientation === 'vertical';
+  root.classList.toggle('layout-vertical', isVertical);
+
+  const button = document.getElementById('btn-toggle-layout');
+  button.textContent = isVertical ? '↔ Chuyển sang ngang' : '↕ Chuyển sang dọc';
+  button.title = isVertical ? 'Đổi sang bố cục ngang' : 'Đổi sang bố cục dọc';
+  button.setAttribute('aria-label', button.title);
+}
+
+function toggleLayoutOrientation() {
+  layoutOrientation = layoutOrientation === 'horizontal' ? 'vertical' : 'horizontal';
+  try { localStorage.setItem(LAYOUT_STORAGE_KEY, layoutOrientation); } catch (err) {}
+  applyLayoutOrientation();
+  applyZoom();
+  requestAnimationFrame(drawAllConnectors);
+}
+
 function loadState() {
   // Hiển thị tạm bằng bản nhớ đệm cục bộ (nếu có) trong lúc chờ tải từ đám mây, cho cảm giác mượt hơn
   try {
@@ -434,6 +477,7 @@ function userIcon() {
 function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
   const card = document.createElement('div');
   card.className = 'card';
+  if (tierTitle !== T4.title) card.classList.add('executive-card');
 
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove';
@@ -515,6 +559,7 @@ function render() {
     saveState();
   };
 
+  applyLayoutOrientation();
   applyZoom();
   drawAllConnectors();
   lockFieldsIfNeeded();
@@ -740,6 +785,10 @@ function buildTeamTable(team) {
 
 function drawBranchFromEl(connectorEl, parentEl, childEls) {
   if (!connectorEl || !parentEl || childEls.length === 0) return;
+  if (layoutOrientation === 'vertical') {
+    drawVerticalBranchFromEl(connectorEl, parentEl, childEls);
+    return;
+  }
   const connectorRect = connectorEl.getBoundingClientRect();
   const width = Math.max(connectorRect.width, 1) / zoomLevel;
   const height = Math.max(connectorRect.height, 1) / zoomLevel;
@@ -766,6 +815,36 @@ function drawBranchFromEl(connectorEl, parentEl, childEls) {
   childPoints.forEach(y => {
     svg += '<line x1="' + midX + '" y1="' + y + '" x2="' + width + '" y2="' + y + '" stroke="' + stroke + '" stroke-width="1.5"/>';
     svg += '<circle cx="' + width + '" cy="' + y + '" r="2.5" fill="' + stroke + '"/>';
+  });
+  svg += '</svg>';
+  connectorEl.innerHTML = svg;
+}
+
+function drawVerticalBranchFromEl(connectorEl, parentEl, childEls) {
+  const connectorRect = connectorEl.getBoundingClientRect();
+  const width = Math.max(connectorRect.width, 1) / zoomLevel;
+  const height = Math.max(connectorRect.height, 1) / zoomLevel;
+  const midY = height / 2;
+  const parentRect = parentEl.getBoundingClientRect();
+  const parentCenterX = (parentRect.left + parentRect.width / 2 - connectorRect.left) / zoomLevel;
+  const childPoints = childEls.map(el => {
+    const r = el.getBoundingClientRect();
+    return (r.left + r.width / 2 - connectorRect.left) / zoomLevel;
+  });
+
+  const stroke = '#c9c6ba';
+  let svg = '<svg width="' + width + '" height="' + height + '" style="position:absolute;top:0;left:0;overflow:visible;">';
+  svg += '<line x1="' + parentCenterX + '" y1="0" x2="' + parentCenterX + '" y2="' + midY + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+
+  const allX = childPoints.concat([parentCenterX]);
+  const minX = Math.min(...allX);
+  const maxX = Math.max(...allX);
+  if (maxX > minX) {
+    svg += '<line x1="' + minX + '" y1="' + midY + '" x2="' + maxX + '" y2="' + midY + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+  }
+  childPoints.forEach(x => {
+    svg += '<line x1="' + x + '" y1="' + midY + '" x2="' + x + '" y2="' + height + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+    svg += '<circle cx="' + x + '" cy="' + height + '" r="2.5" fill="' + stroke + '"/>';
   });
   svg += '</svg>';
   connectorEl.innerHTML = svg;
@@ -816,6 +895,8 @@ document.getElementById('zoom-reset').onclick = () => {
   applyZoom();
   drawAllConnectors();
 };
+
+document.getElementById('btn-toggle-layout').onclick = toggleLayoutOrientation;
 
 const avatarFileInput = document.createElement('input');
 avatarFileInput.type = 'file';
@@ -886,7 +967,8 @@ document.getElementById('btn-download-image').onclick = async () => {
     const dataUrl = canvas.toDataURL('image/png');
     const a = document.createElement('a');
     a.href = dataUrl;
-    a.download = 'so-do-phan-cap.png';
+    // Ảnh luôn dùng đúng chiều đang chọn; tên file cũng cho biết chiều đã chụp.
+    a.download = 'so-do-phan-cap-' + (layoutOrientation === 'vertical' ? 'doc' : 'ngang') + '.png';
     a.click();
     progress.textContent = 'Đã tải ảnh về máy.';
   } catch (err) {
