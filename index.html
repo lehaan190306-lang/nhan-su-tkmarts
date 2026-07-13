@@ -334,7 +334,11 @@
   body.view-mode .team-row button:not(.profile-btn),
   body.view-mode #btn-reset,
   body.view-mode #btn-import,
-  body.view-mode #btn-import-xlsx {
+  body.view-mode #btn-import-xlsx,
+  body.view-mode #btn-download-image,
+  body.view-mode #btn-download-pdf,
+  body.view-mode #btn-export,
+  body.view-mode #btn-export-xlsx {
     opacity: 0.35; pointer-events: none; cursor: not-allowed;
   }
   body.view-mode .avatar,
@@ -434,11 +438,11 @@
     <button id="btn-translate-en" title="Dịch toàn bộ sơ đồ sang tiếng Anh (dùng Google Dịch)">🌐 English</button>
     <button id="btn-toggle-more" class="mobile-more-toggle" type="button">⋯ Thêm</button>
     <span class="toolbar-more" id="toolbar-more">
-      <button id="btn-download-image">Tải ảnh về máy (.png)</button>
-      <button id="btn-download-pdf">Xuất PDF</button>
-      <button id="btn-export">Xuất file (.json)</button>
+      <button id="btn-download-image" title="Cần mở khóa chỉnh sửa mới tải được ảnh">Tải ảnh về máy (.png)</button>
+      <button id="btn-download-pdf" title="Cần mở khóa chỉnh sửa mới xuất được">Xuất PDF</button>
+      <button id="btn-export" title="Cần mở khóa chỉnh sửa mới xuất được">Xuất file (.json)</button>
       <button id="btn-import">Nhập file (.json)</button>
-      <button id="btn-export-xlsx">Xuất Excel</button>
+      <button id="btn-export-xlsx" title="Cần mở khóa chỉnh sửa mới xuất được">Xuất Excel</button>
       <button id="btn-import-xlsx">Nhập Excel</button>
       <button id="btn-reset" class="danger">Xóa hết, làm lại</button>
       <input type="file" id="file-input" accept=".json">
@@ -1917,7 +1921,7 @@ document.getElementById('btn-reset').onclick = guardEdit(() => {
   }
 });
 
-document.getElementById('btn-download-image').onclick = async () => {
+document.getElementById('btn-download-image').onclick = guardEdit(async () => {
   const btn = document.getElementById('btn-download-image');
   const progress = document.getElementById('img-progress');
   btn.disabled = true;
@@ -1971,9 +1975,9 @@ document.getElementById('btn-download-image').onclick = async () => {
     btn.disabled = false;
     setTimeout(() => { progress.textContent = ''; }, 4000);
   }
-};
+});
 
-document.getElementById('btn-download-pdf').onclick = async () => {
+document.getElementById('btn-download-pdf').onclick = guardEdit(async () => {
   if (!window.jspdf?.jsPDF) { alert('Chưa tải được thư viện PDF. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
   const btn = document.getElementById('btn-download-pdf');
   const progress = document.getElementById('img-progress');
@@ -2012,7 +2016,7 @@ document.getElementById('btn-download-pdf').onclick = async () => {
     btn.disabled = false;
     setTimeout(() => { progress.textContent = ''; }, 4000);
   }
-};
+});
 
 function spreadsheetRow(level, person, dept = '', managerName = '') {
   ensurePersonProfile(person);
@@ -2105,7 +2109,7 @@ function importExcelRows(rows) {
   setStatus('Đã nhập dữ liệu từ Excel. Ảnh đại diện không có trong tệp Excel nên cần thêm lại nếu cần.');
 }
 
-document.getElementById('btn-export-xlsx').onclick = exportExcel;
+document.getElementById('btn-export-xlsx').onclick = guardEdit(exportExcel);
 document.getElementById('btn-import-xlsx').onclick = guardEdit(() => document.getElementById('file-input-xlsx').click());
 document.getElementById('file-input-xlsx').onchange = (event) => {
   if (!editMode) { event.target.value = ''; return; }
@@ -2126,7 +2130,7 @@ document.getElementById('file-input-xlsx').onchange = (event) => {
   event.target.value = '';
 };
 
-document.getElementById('btn-export').onclick = () => {
+document.getElementById('btn-export').onclick = guardEdit(() => {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2134,7 +2138,7 @@ document.getElementById('btn-export').onclick = () => {
   a.download = 'so-do-phan-cap.json';
   a.click();
   URL.revokeObjectURL(url);
-};
+});
 
 document.getElementById('btn-import').onclick = guardEdit(() => {
   document.getElementById('file-input').click();
