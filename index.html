@@ -402,6 +402,14 @@
     .toolbar.show-more .toolbar-more { display: contents; }
     .toolbar button, .toolbar .lock-badge, .toolbar .search-input, .toolbar .filter-select { flex: 0 0 auto; }
   }
+
+  /* Ẩn giao diện mặc định của Google Translate, chỉ dùng nút riêng để bật/tắt */
+  #google_translate_element { position: absolute; top: -9999px; left: -9999px; height: 0; overflow: hidden; }
+  .goog-te-banner-frame.skiptranslate { display: none !important; }
+  body { top: 0 !important; }
+  .goog-tooltip, .goog-tooltip:hover { display: none !important; }
+  .goog-text-highlight { background: none !important; box-shadow: none !important; }
+  #btn-translate-en.is-active { background: var(--brand-soft); border-color: #b7d3ec; color: var(--brand); }
 </style>
 </head>
 <body>
@@ -423,6 +431,7 @@
     <button id="btn-toggle-layout" title="Đổi chiều hiển thị sơ đồ">↕ Chuyển sang dọc</button>
     <button id="btn-collapse-all" title="Thu gọn tất cả bộ phận — dễ xem trên điện thoại">▾ Thu gọn tất cả</button>
     <button id="btn-expand-all" title="Mở rộng tất cả bộ phận">▸ Mở tất cả</button>
+    <button id="btn-translate-en" title="Dịch toàn bộ sơ đồ sang tiếng Anh (dùng Google Dịch)">🌐 English</button>
     <button id="btn-toggle-more" class="mobile-more-toggle" type="button">⋯ Thêm</button>
     <span class="toolbar-more" id="toolbar-more">
       <button id="btn-download-image">Tải ảnh về máy (.png)</button>
@@ -2169,6 +2178,73 @@ async function tryAutoUnlockFromLink() {
 tryAutoUnlockFromLink();
 
 loadState();
+
+/* ===== Dịch sang tiếng Anh (Google Translate) ===== */
+(function () {
+  const COOKIE_NAME = 'googtrans';
+  const LANG_PAIR = '/vi/en';
+
+  function readGoogTransCookie() {
+    const match = document.cookie.match(/(?:^|;\s*)googtrans=([^;]*)/);
+    return match ? decodeURIComponent(match[1]) : '';
+  }
+  function setGoogTransCookie(value) {
+    const base = 'path=/;max-age=31536000';
+    document.cookie = COOKIE_NAME + '=' + encodeURIComponent(value) + ';' + base;
+    document.cookie = COOKIE_NAME + '=' + encodeURIComponent(value) + ';' + base + ';domain=' + location.hostname;
+  }
+  function clearGoogTransCookie() {
+    const expired = 'path=/;expires=Thu, 01 Jan 1970 00:00:00 UTC';
+    document.cookie = COOKIE_NAME + '=;' + expired;
+    document.cookie = COOKIE_NAME + '=;' + expired + ';domain=' + location.hostname;
+  }
+
+  function updateTranslateButton() {
+    const btn = document.getElementById('btn-translate-en');
+    if (!btn) return;
+    const isEnglish = readGoogTransCookie() === LANG_PAIR;
+    btn.textContent = isEnglish ? '🌐 Tiếng Việt' : '🌐 English';
+    btn.title = isEnglish ? 'Quay lại tiếng Việt' : 'Dịch toàn bộ sơ đồ sang tiếng Anh (dùng Google Dịch)';
+    btn.classList.toggle('is-active', isEnglish);
+  }
+
+  window.googleTranslateElementInit = function () {
+    new google.translate.TranslateElement(
+      { pageLanguage: 'vi', includedLanguages: 'en', autoDisplay: false },
+      'google_translate_element'
+    );
+  };
+
+  function ensureTranslateScriptLoaded() {
+    if (document.getElementById('google-translate-script')) return;
+    const script = document.createElement('script');
+    script.id = 'google-translate-script';
+    script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    script.onerror = function () {
+      alert('Không tải được Google Dịch. Hãy kiểm tra kết nối mạng rồi thử lại.');
+    };
+    document.body.appendChild(script);
+  }
+
+  const hiddenHost = document.createElement('div');
+  hiddenHost.id = 'google_translate_element';
+  document.body.appendChild(hiddenHost);
+
+  document.getElementById('btn-translate-en').onclick = function () {
+    if (readGoogTransCookie() === LANG_PAIR) {
+      clearGoogTransCookie();
+    } else {
+      setGoogTransCookie(LANG_PAIR);
+      ensureTranslateScriptLoaded();
+    }
+    location.reload();
+  };
+
+  if (readGoogTransCookie() === LANG_PAIR) {
+    ensureTranslateScriptLoaded();
+  }
+  updateTranslateButton();
+})();
 </script>
 </body>
 </html>
