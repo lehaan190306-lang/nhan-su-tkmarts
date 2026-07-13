@@ -493,10 +493,12 @@ const DOC_PATH = { collection: 'orgcharts', doc: 'main' };
 let firebaseReady = false;
 let db = null;
 let docRef = null;
+let historyColRef = null;
 try {
   firebase.initializeApp(FIREBASE_CONFIG);
   db = firebase.firestore();
   docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
+  historyColRef = docRef.collection('history'); // lưu lịch sử ở collection con riêng, tách khỏi tài liệu chính để không vượt giới hạn 1MB khi có ảnh
   firebaseReady = true;
 } catch (err) {
   console.error('Không khởi tạo được Firebase:', err);
@@ -691,6 +693,35 @@ function fileToDataURL(file) {
     reader.readAsDataURL(file);
   });
 }
+
+// Thu nhỏ & nén ảnh trước khi lưu (tránh ảnh gốc từ điện thoại quá nặng làm vượt giới hạn lưu trữ)
+// maxDim: kích thước cạnh dài nhất tối đa (px). mimeType/quality: định dạng và chất lượng nén xuất ra.
+function compressImageFile(file, maxDim, mimeType, quality) {
+  return new Promise((resolve, reject) => {
+    fileToDataURL(file).then((dataUrl) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Không đọc được ảnh.'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        try {
+          resolve(canvas.toDataURL(mimeType, quality));
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.src = dataUrl;
+    }).catch(reject);
+  });
+}
 function updateSettingsPreview(imgEl, src) {
   if (src) { imgEl.src = src; imgEl.classList.add('is-visible'); }
   else { imgEl.src = ''; imgEl.classList.remove('is-visible'); }
@@ -703,7 +734,12 @@ settingsLogoFileInput.onchange = async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-  pendingLogoDataUrl = await fileToDataURL(file);
+  try {
+    pendingLogoDataUrl = await compressImageFile(file, 400, 'image/png', 0.9);
+  } catch (err) {
+    alert('Không xử lý được ảnh logo: ' + err.message);
+    return;
+  }
   settingsModal.querySelector('#setting-logo-url').value = '';
   updateSettingsPreview(settingsModal.querySelector('#setting-logo-preview'), pendingLogoDataUrl);
 };
@@ -716,7 +752,12 @@ settingsBgFileInput.onchange = async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-  pendingBgDataUrl = await fileToDataURL(file);
+  try {
+    pendingBgDataUrl = await compressImageFile(file, 1600, 'image/jpeg', 0.7);
+  } catch (err) {
+    alert('Không xử lý được ảnh nền: ' + err.message);
+    return;
+  }
   settingsModal.querySelector('#setting-bg-url').value = '';
   updateSettingsPreview(settingsModal.querySelector('#setting-bg-preview'), pendingBgDataUrl);
 };
@@ -933,12 +974,11 @@ function loadState() {
     if (snap.metadata.hasPendingWrites) return; // bỏ qua tiếng vọng của chính lần ghi của mình
     if (!snap.exists) {
       // Chưa có dữ liệu trên đám mây -> khởi tạo bằng dữ liệu mặc định
-      docRef.set({ state: defaultState(), editHistory: [], updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      docRef.set({ state: defaultState(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
       return;
     }
     const data = snap.data();
     state = data.state || defaultState();
-    editHistory = Array.isArray(data.editHistory) ? data.editHistory : [];
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
     render();
     setStatus('Đã đồng bộ với đám mây · ' + new Date().toLocaleTimeString('vi-VN'));
@@ -960,6 +1000,7 @@ function saveState(options = {}) {
       setStatus('⚠️ Đã lưu tạm trên máy này (chưa có đám mây để đồng bộ cho người khác).');
     } catch (err) {
       setStatus('Không lưu được: ' + err.message);
+      alert('Không lưu được trên máy này (có thể do ảnh vừa chọn quá lớn). Hãy thử chọn ảnh khác hoặc dung lượng nhỏ hơn.');
     }
     return;
   }
@@ -967,16 +1008,46 @@ function saveState(options = {}) {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try {
-      const entry = { name: currentEditorName || 'Ẩn danh', at: new Date().toISOString(), state: state, action: actionLabel };
-      const newHistory = [entry, ...(Array.isArray(editHistory) ? editHistory : [])].slice(0, 20);
-      await docRef.set({ state, editHistory: newHistory, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-      editHistory = newHistory;
+      // Tài liệu chính chỉ chứa dữ liệu sơ đồ hiện tại — gọn nhẹ, không kèm lịch sử để tránh vượt giới hạn dung lượng
+      await docRef.set({ state, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       setStatus('Đã lưu lên đám mây · ' + new Date().toLocaleTimeString('vi-VN'));
+
+      // Ghi một dòng lịch sử riêng (không ảnh hưởng tới việc lưu dữ liệu chính ở trên dù có lỗi)
+      try {
+        await historyColRef.add({
+          name: currentEditorName || 'Ẩn danh',
+          at: new Date().toISOString(),
+          action: actionLabel,
+          state: state,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        pruneOldHistory();
+      } catch (histErr) {
+        console.error('Không ghi được lịch sử (dữ liệu chính vẫn đã lưu an toàn):', histErr);
+      }
     } catch (err) {
       setStatus('Không lưu được lên đám mây: ' + err.message);
+      const sizeIssue = /longer than|exceeds|too large|invalid-argument|resource-exhausted/i.test(err.message || '');
+      alert(
+        'Không lưu được lên đám mây.\n\nLý do: ' + err.message +
+        (sizeIssue ? '\n\nCó thể ảnh bạn vừa tải lên quá lớn. Hãy thử chọn ảnh khác hoặc ảnh có dung lượng nhỏ hơn.' : '')
+      );
     }
   }, 300);
+}
+
+// Xóa bớt các dòng lịch sử cũ, chỉ giữ lại 20 dòng gần nhất để collection không phình to mãi
+async function pruneOldHistory() {
+  try {
+    const snap = await historyColRef.orderBy('at', 'desc').get();
+    const docs = snap.docs;
+    if (docs.length <= 20) return;
+    const toDelete = docs.slice(20);
+    await Promise.all(toDelete.map((d) => d.ref.delete()));
+  } catch (err) {
+    console.error('Không dọn được lịch sử cũ:', err);
+  }
 }
 
 // Phát hiệu ứng "biến mất" cho một thẻ/khối trước khi thật sự xóa khỏi dữ liệu.
@@ -1707,28 +1778,47 @@ function formatHistoryTime(iso) {
   } catch (err) { return ''; }
 }
 
-function openHistory() {
+async function openHistory() {
   const list = historyModal.querySelector('#history-list');
-  if (!editHistory || editHistory.length === 0) {
-    list.innerHTML = '<li class="history-empty">Chưa có lịch sử chỉnh sửa nào.</li>';
-  } else {
-    list.innerHTML = editHistory.map((entry, idx) =>
-      '<li>' +
-        '<div class="history-info">' +
-          '<span class="history-name">' + (entry.name || 'Ẩn danh') + '</span>' +
-          '<span class="history-action">' + (entry.action || 'Cập nhật sơ đồ') + '</span>' +
-          '<span class="history-time">' + formatHistoryTime(entry.at) + '</span>' +
-        '</div>' +
-        (entry.state ?
-          '<button type="button" class="history-restore-btn" data-idx="' + idx + '" ' + (editMode ? '' : 'disabled title="Bật chế độ chỉnh sửa để khôi phục"') + '>Khôi phục</button>'
-          : '<span class="history-time">(không có bản lưu)</span>') +
-      '</li>'
-    ).join('');
-    list.querySelectorAll('.history-restore-btn').forEach((btn) => {
-      btn.onclick = () => restoreHistoryEntry(parseInt(btn.dataset.idx, 10));
-    });
-  }
   historyModal.classList.add('is-open');
+
+  if (!firebaseReady) {
+    // Chế độ dự phòng: dùng danh sách lịch sử cục bộ đã có sẵn trong bộ nhớ
+    renderHistoryList(editHistory);
+    return;
+  }
+
+  list.innerHTML = '<li class="history-empty">Đang tải lịch sử...</li>';
+  try {
+    const snap = await historyColRef.orderBy('at', 'desc').limit(20).get();
+    editHistory = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderHistoryList(editHistory);
+  } catch (err) {
+    list.innerHTML = '<li class="history-empty">Không tải được lịch sử: ' + err.message + '</li>';
+  }
+}
+
+function renderHistoryList(entries) {
+  const list = historyModal.querySelector('#history-list');
+  if (!entries || entries.length === 0) {
+    list.innerHTML = '<li class="history-empty">Chưa có lịch sử chỉnh sửa nào.</li>';
+    return;
+  }
+  list.innerHTML = entries.map((entry, idx) =>
+    '<li>' +
+      '<div class="history-info">' +
+        '<span class="history-name">' + (entry.name || 'Ẩn danh') + '</span>' +
+        '<span class="history-action">' + (entry.action || 'Cập nhật sơ đồ') + '</span>' +
+        '<span class="history-time">' + formatHistoryTime(entry.at) + '</span>' +
+      '</div>' +
+      (entry.state ?
+        '<button type="button" class="history-restore-btn" data-idx="' + idx + '" ' + (editMode ? '' : 'disabled title="Bật chế độ chỉnh sửa để khôi phục"') + '>Khôi phục</button>'
+        : '<span class="history-time">(không có bản lưu)</span>') +
+    '</li>'
+  ).join('');
+  list.querySelectorAll('.history-restore-btn').forEach((btn) => {
+    btn.onclick = () => restoreHistoryEntry(parseInt(btn.dataset.idx, 10));
+  });
 }
 document.getElementById('btn-history').onclick = openHistory;
 
@@ -1760,17 +1850,17 @@ const avatarFileInput = document.createElement('input');
 avatarFileInput.type = 'file';
 avatarFileInput.accept = 'image/*';
 avatarFileInput.id = 'file-input-avatar-trigger';
-avatarFileInput.onchange = (e) => {
+avatarFileInput.onchange = async (e) => {
   if (!editMode) { e.target.value = ''; return; }
   const file = e.target.files[0];
-  if (!file || !pendingAvatarTarget) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    pendingAvatarTarget.photo = reader.result;
+  if (!file || !pendingAvatarTarget) { avatarFileInput.value = ''; return; }
+  try {
+    pendingAvatarTarget.photo = await compressImageFile(file, 320, 'image/jpeg', 0.85);
     render();
     saveState({ action: 'Đổi ảnh đại diện: ' + (pendingAvatarTarget.name || '(trống)') });
-  };
-  reader.readAsDataURL(file);
+  } catch (err) {
+    alert('Không xử lý được ảnh: ' + err.message);
+  }
   avatarFileInput.value = '';
 };
 document.body.appendChild(avatarFileInput);
