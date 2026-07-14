@@ -286,6 +286,19 @@
   .settings-preview { width: 40px; height: 40px; border-radius: 8px; object-fit: contain; border: 1px solid var(--border); background: #fff; flex-shrink: 0; display: none; }
   .settings-preview.is-visible { display: block; }
   .settings-preview.bg-preview { object-fit: cover; border-radius: 6px; }
+  .profile-dialog-lg { width: min(640px, 100%); max-height: 86vh; overflow-y: auto; }
+  .profile-section-title { font-size: 12px; font-weight: 700; color: var(--brand); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; border-top: 1px solid var(--border); padding-top: 14px; }
+  .profile-section-title.is-first { border-top: none; padding-top: 0; margin-top: 0; }
+  .profile-field select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: #fff; }
+  .file-link { font-size: 12px; color: var(--brand); text-decoration: none; }
+  .file-link:not([href]) { color: var(--text-muted); cursor: default; }
+  .file-list { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 6px; }
+  .file-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; background: #f7f8fa; padding: 6px 10px; border-radius: 8px; }
+  .file-list li a { color: var(--brand); text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-list li button { border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px; flex-shrink: 0; }
+  .file-list li button:hover { color: #a32d2d; }
+  .file-list li.is-empty { color: var(--text-muted); background: none; padding: 0; }
+  .upload-status { font-size: 12px; color: var(--text-secondary); min-height: 16px; margin-top: 8px; }
   .settings-range-row { display: flex; align-items: center; gap: 8px; }
   .settings-range-row input[type="range"] { flex: 1; }
   .settings-range-row .range-value { font-size: 12px; color: var(--text-secondary); width: 34px; text-align: right; }
@@ -507,14 +520,68 @@ let firebaseReady = false;
 let db = null;
 let docRef = null;
 let historyColRef = null;
+let filesColRef = null;
 try {
   firebase.initializeApp(FIREBASE_CONFIG);
   db = firebase.firestore();
   docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
   historyColRef = docRef.collection('history'); // lưu lịch sử ở collection con riêng, tách khỏi tài liệu chính để không vượt giới hạn 1MB khi có ảnh
+  filesColRef = db.collection('nhansu_files'); // lưu tệp đính kèm hồ sơ (CCCD/hợp đồng/bằng cấp) thành từng tài liệu riêng trong Firestore, KHÔNG dùng Firebase Storage (Storage yêu cầu nâng cấp gói trả phí)
   firebaseReady = true;
 } catch (err) {
   console.error('Không khởi tạo được Firebase:', err);
+}
+
+// Giới hạn dung lượng gốc cho tệp KHÔNG PHẢI ảnh (ví dụ PDF), vì không nén được như ảnh.
+// Firestore giới hạn ~1MB/tài liệu, mã hóa base64 làm tệp phình to hơn ~37%, nên đặt ngưỡng an toàn thấp hơn nhiều.
+const MAX_RAW_FILE_BYTES = 650 * 1024; // ~650KB
+
+function fileToDataUrlRaw(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Không đọc được tệp.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// Lưu một tệp (ảnh/PDF) đính kèm hồ sơ nhân sự thành MỘT TÀI LIỆU RIÊNG trong Firestore
+// (collection "nhansu_files"), tách khỏi tài liệu sơ đồ chính để không làm phình tài liệu chính.
+// Ảnh sẽ được tự động nén nhỏ lại; PDF thì giữ nguyên nhưng bị giới hạn dung lượng.
+async function uploadPersonFile(file, personId, kind) {
+  if (!firebaseReady || !filesColRef) throw new Error('Chưa kết nối được Firebase.');
+  let dataUrl;
+  if (file.type.startsWith('image/')) {
+    dataUrl = await compressImageFile(file, 1400, 'image/jpeg', 0.75);
+  } else {
+    if (file.size > MAX_RAW_FILE_BYTES) {
+      throw new Error('Tệp quá lớn (giới hạn khoảng ' + Math.round(MAX_RAW_FILE_BYTES / 1024) + 'KB cho tệp PDF/không phải ảnh). Hãy nén tệp nhỏ lại hoặc chụp ảnh thay vì tải nguyên văn bản PDF.');
+    }
+    dataUrl = await fileToDataUrlRaw(file);
+  }
+  const added = await filesColRef.add({
+    personId, kind, name: file.name, mimeType: file.type || 'application/octet-stream',
+    dataUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  return { id: added.id, name: file.name };
+}
+
+// Mở/tải một tệp đã lưu ở Firestore (theo id tài liệu) trong tab mới.
+async function openPersonFile(fileId) {
+  if (!fileId) return;
+  if (!firebaseReady || !filesColRef) { alert('Chưa kết nối được Firebase.'); return; }
+  try {
+    const snap = await filesColRef.doc(fileId).get();
+    if (!snap.exists) { alert('Không tìm thấy tệp này (có thể đã bị xóa).'); return; }
+    const data = snap.data();
+    const res = await fetch(data.dataUrl);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, '_blank');
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+  } catch (err) {
+    alert('Lỗi khi mở tệp: ' + err.message);
+  }
 }
 
 const T1 = { id: 't1', title: 'Chủ tịch', accent: '#534AB7' };
@@ -587,9 +654,12 @@ function genPersonId() {
 }
 
 function ensurePersonProfile(person) {
-  ['title', 'phone', 'email', 'note'].forEach((key) => {
+  ['title', 'phone', 'email', 'note', 'gender', 'dob', 'address', 'joinDate', 'status',
+   'cccd', 'bhxh', 'salary', 'bank', 'cccdFileId', 'contractFileId'].forEach((key) => {
     if (typeof person[key] !== 'string') person[key] = '';
   });
+  if (!person.status) person.status = 'Đang làm';
+  if (!Array.isArray(person.degreeFiles)) person.degreeFiles = [];
   // Mỗi người cần một ID cố định để tra cứu lại đúng người đó sau này (ví dụ khi
   // đang mở hộp thoại chọn ảnh mà dữ liệu vừa được đồng bộ mới từ đám mây về —
   // nếu chỉ giữ tham chiếu object cũ thì ảnh sẽ bị gán "lạc" vào dữ liệu cũ đã bị thay thế).
@@ -617,7 +687,7 @@ function findPersonById(id) {
 
 function personSearchText(person, extra = '') {
   ensurePersonProfile(person);
-  return [person.name, person.title, person.phone, person.email, person.note, extra].join(' ').toLocaleLowerCase('vi-VN');
+  return [person.name, person.title, person.phone, person.email, person.note, person.cccd, person.address, extra].join(' ').toLocaleLowerCase('vi-VN');
 }
 
 function applySearchFilter() {
@@ -638,23 +708,168 @@ let profileTarget = null;
 const profileModal = document.createElement('div');
 profileModal.className = 'profile-modal';
 profileModal.innerHTML =
-  '<div class="profile-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-heading">' +
+  '<div class="profile-dialog profile-dialog-lg" role="dialog" aria-modal="true" aria-labelledby="profile-heading">' +
     '<h2 id="profile-heading">Hồ sơ nhân sự</h2>' +
-    '<div class="profile-field"><label for="profile-title">Chức danh chi tiết</label><input id="profile-title" type="text" placeholder="VD: Trưởng phòng Kinh doanh"></div>' +
-    '<div class="profile-field"><label for="profile-phone">Số điện thoại</label><input id="profile-phone" type="tel" placeholder="VD: 0901 234 567"></div>' +
-    '<div class="profile-field"><label for="profile-email">Email</label><input id="profile-email" type="email" placeholder="VD: ten@congty.com"></div>' +
-    '<div class="profile-field"><label for="profile-note">Ghi chú</label><textarea id="profile-note" placeholder="Thông tin thêm..."></textarea></div>' +
+
+    '<div class="profile-section-title is-first">Thông tin cơ bản</div>' +
+    '<div class="settings-grid">' +
+      '<div class="profile-field"><label for="profile-title">Chức danh chi tiết</label><input id="profile-title" type="text" placeholder="VD: Trưởng phòng Kinh doanh"></div>' +
+      '<div class="profile-field"><label for="profile-gender">Giới tính</label><select id="profile-gender"><option value="">-- Chọn --</option><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select></div>' +
+      '<div class="profile-field"><label for="profile-dob">Ngày sinh</label><input id="profile-dob" type="date"></div>' +
+      '<div class="profile-field"><label for="profile-phone">Số điện thoại</label><input id="profile-phone" type="tel" placeholder="VD: 0901 234 567"></div>' +
+      '<div class="profile-field"><label for="profile-email">Email</label><input id="profile-email" type="email" placeholder="VD: ten@congty.com"></div>' +
+      '<div class="profile-field full-width"><label for="profile-address">Địa chỉ</label><input id="profile-address" type="text" placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></div>' +
+    '</div>' +
+
+    '<div class="profile-section-title">Thông tin công việc</div>' +
+    '<div class="settings-grid">' +
+      '<div class="profile-field"><label for="profile-join-date">Ngày vào làm</label><input id="profile-join-date" type="date"></div>' +
+      '<div class="profile-field"><label for="profile-status">Trạng thái</label><select id="profile-status"><option value="Đang làm">Đang làm</option><option value="Tạm nghỉ">Tạm nghỉ</option><option value="Đã nghỉ việc">Đã nghỉ việc</option></select></div>' +
+    '</div>' +
+
+    '<div class="profile-section-title">Lương &amp; bảo hiểm &amp; giấy tờ tùy thân</div>' +
+    '<div class="settings-grid">' +
+      '<div class="profile-field"><label for="profile-cccd">Số CCCD</label><input id="profile-cccd" type="text"></div>' +
+      '<div class="profile-field"><label for="profile-bhxh">Số sổ BHXH</label><input id="profile-bhxh" type="text"></div>' +
+      '<div class="profile-field"><label for="profile-salary">Lương (VNĐ)</label><input id="profile-salary" type="text" placeholder="VD: 12.000.000"></div>' +
+      '<div class="profile-field"><label for="profile-bank">Ngân hàng - Số tài khoản</label><input id="profile-bank" type="text" placeholder="VD: Vietcombank - 0123456789"></div>' +
+    '</div>' +
+
+    '<div class="profile-section-title">Tệp đính kèm</div>' +
+    '<div class="profile-field full-width"><label>CCCD (scan mặt trước/sau)</label>' +
+      '<div class="settings-upload-row"><button type="button" id="btn-upload-cccd">Tải tệp lên</button><a id="link-cccd" class="file-link" target="_blank" rel="noopener">Chưa có tệp</a></div>' +
+    '</div>' +
+    '<div class="profile-field full-width"><label>Hợp đồng lao động (scan)</label>' +
+      '<div class="settings-upload-row"><button type="button" id="btn-upload-contract">Tải tệp lên</button><a id="link-contract" class="file-link" target="_blank" rel="noopener">Chưa có tệp</a></div>' +
+    '</div>' +
+    '<div class="profile-field full-width"><label>Bằng cấp / chứng chỉ (có thể thêm nhiều tệp)</label>' +
+      '<div class="settings-upload-row"><button type="button" id="btn-upload-degree">+ Thêm tệp</button></div>' +
+      '<ul id="degree-file-list" class="file-list"></ul>' +
+    '</div>' +
+
+    '<div class="profile-field full-width"><label for="profile-note">Ghi chú</label><textarea id="profile-note" placeholder="Thông tin thêm..."></textarea></div>' +
+    '<div id="profile-upload-status" class="upload-status"></div>' +
     '<div class="profile-actions"><button type="button" class="close-profile">Đóng</button><button type="button" class="save-profile">Lưu hồ sơ</button></div>' +
   '</div>';
 document.body.appendChild(profileModal);
 
+// Ba input file ẩn dùng chung cho việc chọn tệp CCCD / hợp đồng / bằng cấp
+const fileInputCccd = document.createElement('input');
+fileInputCccd.type = 'file'; fileInputCccd.accept = 'image/*,.pdf';
+document.body.appendChild(fileInputCccd);
+const fileInputContract = document.createElement('input');
+fileInputContract.type = 'file'; fileInputContract.accept = 'image/*,.pdf';
+document.body.appendChild(fileInputContract);
+const fileInputDegree = document.createElement('input');
+fileInputDegree.type = 'file'; fileInputDegree.accept = 'image/*,.pdf'; fileInputDegree.multiple = true;
+document.body.appendChild(fileInputDegree);
+
+function setProfileUploadStatus(msg) {
+  profileModal.querySelector('#profile-upload-status').textContent = msg || '';
+}
+
+function updateFileLink(linkEl, fileId) {
+  linkEl.removeAttribute('href');
+  if (fileId) {
+    linkEl.textContent = '📎 Xem tệp đã tải lên';
+    linkEl.onclick = (e) => { e.preventDefault(); openPersonFile(fileId); };
+  } else {
+    linkEl.textContent = 'Chưa có tệp';
+    linkEl.onclick = null;
+  }
+}
+
+function renderDegreeList() {
+  const list = profileModal.querySelector('#degree-file-list');
+  list.innerHTML = '';
+  const files = profileTarget ? (profileTarget.degreeFiles || []) : [];
+  if (!files.length) {
+    list.innerHTML = '<li class="is-empty">Chưa có tệp nào</li>';
+    return;
+  }
+  files.forEach((f, idx) => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#'; a.textContent = '📎 ' + (f.name || ('Tệp ' + (idx + 1)));
+    a.onclick = (e) => { e.preventDefault(); openPersonFile(f.id); };
+    li.appendChild(a);
+    if (editMode) {
+      const rm = document.createElement('button');
+      rm.type = 'button'; rm.textContent = '✕ Xóa'; rm.title = 'Bỏ tệp này khỏi hồ sơ';
+      rm.onclick = () => { profileTarget.degreeFiles.splice(idx, 1); renderDegreeList(); };
+      li.appendChild(rm);
+    }
+    list.appendChild(li);
+  });
+}
+
+fileInputCccd.onchange = async (e) => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file || !profileTarget) return;
+  try {
+    setProfileUploadStatus('Đang lưu tệp CCCD...');
+    const { id } = await uploadPersonFile(file, profileTarget.id, 'cccd');
+    profileTarget.cccdFileId = id;
+    updateFileLink(profileModal.querySelector('#link-cccd'), id);
+    setProfileUploadStatus('Đã lưu tệp CCCD. Nhớ bấm "Lưu hồ sơ" để lưu lại.');
+  } catch (err) {
+    setProfileUploadStatus('Lỗi lưu tệp: ' + err.message);
+  }
+};
+fileInputContract.onchange = async (e) => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file || !profileTarget) return;
+  try {
+    setProfileUploadStatus('Đang lưu hợp đồng...');
+    const { id } = await uploadPersonFile(file, profileTarget.id, 'hopdong');
+    profileTarget.contractFileId = id;
+    updateFileLink(profileModal.querySelector('#link-contract'), id);
+    setProfileUploadStatus('Đã lưu hợp đồng. Nhớ bấm "Lưu hồ sơ" để lưu lại.');
+  } catch (err) {
+    setProfileUploadStatus('Lỗi lưu tệp: ' + err.message);
+  }
+};
+fileInputDegree.onchange = async (e) => {
+  const files = Array.from(e.target.files || []); e.target.value = '';
+  if (!files.length || !profileTarget) return;
+  setProfileUploadStatus('Đang lưu ' + files.length + ' tệp...');
+  for (const file of files) {
+    try {
+      const { id, name } = await uploadPersonFile(file, profileTarget.id, 'bangcap');
+      profileTarget.degreeFiles.push({ id, name });
+    } catch (err) {
+      setProfileUploadStatus('Lỗi lưu tệp "' + file.name + '": ' + err.message);
+      return;
+    }
+  }
+  renderDegreeList();
+  setProfileUploadStatus('Đã lưu xong. Nhớ bấm "Lưu hồ sơ" để lưu lại.');
+};
+profileModal.querySelector('#btn-upload-cccd').onclick = () => { if (editMode) fileInputCccd.click(); };
+profileModal.querySelector('#btn-upload-contract').onclick = () => { if (editMode) fileInputContract.click(); };
+profileModal.querySelector('#btn-upload-degree').onclick = () => { if (editMode) fileInputDegree.click(); };
+
 function openProfile(person) {
   profileTarget = ensurePersonProfile(person);
   profileModal.querySelector('#profile-title').value = profileTarget.title;
+  profileModal.querySelector('#profile-gender').value = profileTarget.gender || '';
+  profileModal.querySelector('#profile-dob').value = profileTarget.dob || '';
   profileModal.querySelector('#profile-phone').value = profileTarget.phone;
   profileModal.querySelector('#profile-email').value = profileTarget.email;
+  profileModal.querySelector('#profile-address').value = profileTarget.address || '';
+  profileModal.querySelector('#profile-join-date').value = profileTarget.joinDate || '';
+  profileModal.querySelector('#profile-status').value = profileTarget.status || 'Đang làm';
+  profileModal.querySelector('#profile-cccd').value = profileTarget.cccd || '';
+  profileModal.querySelector('#profile-bhxh').value = profileTarget.bhxh || '';
+  profileModal.querySelector('#profile-salary').value = profileTarget.salary || '';
+  profileModal.querySelector('#profile-bank').value = profileTarget.bank || '';
   profileModal.querySelector('#profile-note').value = profileTarget.note;
-  profileModal.querySelectorAll('input, textarea').forEach((field) => { field.disabled = !editMode; });
+  updateFileLink(profileModal.querySelector('#link-cccd'), profileTarget.cccdFileId);
+  updateFileLink(profileModal.querySelector('#link-contract'), profileTarget.contractFileId);
+  renderDegreeList();
+  setProfileUploadStatus('');
+  profileModal.querySelectorAll('input, textarea, select').forEach((field) => { field.disabled = !editMode; });
+  profileModal.querySelectorAll('.settings-upload-row button').forEach((btn) => { btn.style.display = editMode ? '' : 'none'; });
   profileModal.querySelector('.save-profile').style.display = editMode ? '' : 'none';
   profileModal.classList.add('is-open');
 }
@@ -668,12 +883,21 @@ profileModal.querySelector('.close-profile').onclick = closeProfile;
 profileModal.querySelector('.save-profile').onclick = () => {
   if (!editMode || !profileTarget) return;
   profileTarget.title = profileModal.querySelector('#profile-title').value.trim();
+  profileTarget.gender = profileModal.querySelector('#profile-gender').value;
+  profileTarget.dob = profileModal.querySelector('#profile-dob').value;
   profileTarget.phone = profileModal.querySelector('#profile-phone').value.trim();
   profileTarget.email = profileModal.querySelector('#profile-email').value.trim();
+  profileTarget.address = profileModal.querySelector('#profile-address').value.trim();
+  profileTarget.joinDate = profileModal.querySelector('#profile-join-date').value;
+  profileTarget.status = profileModal.querySelector('#profile-status').value;
+  profileTarget.cccd = profileModal.querySelector('#profile-cccd').value.trim();
+  profileTarget.bhxh = profileModal.querySelector('#profile-bhxh').value.trim();
+  profileTarget.salary = profileModal.querySelector('#profile-salary').value.trim();
+  profileTarget.bank = profileModal.querySelector('#profile-bank').value.trim();
   profileTarget.note = profileModal.querySelector('#profile-note').value.trim();
   closeProfile();
   render();
-  saveState({ action: 'Cập nhật hồ sơ nhân sự (chức danh/SĐT/email/ghi chú)' });
+  saveState({ action: 'Cập nhật hồ sơ nhân sự đầy đủ' });
 };
 profileModal.addEventListener('click', (event) => { if (event.target === profileModal) closeProfile(); });
 
@@ -2026,8 +2250,17 @@ function spreadsheetRow(level, person, dept = '', managerName = '') {
     'Quản lý': managerName,
     'Tên': person.name || '',
     'Chức danh chi tiết': person.title || '',
+    'Giới tính': person.gender || '',
+    'Ngày sinh': person.dob || '',
     'Điện thoại': person.phone || '',
     'Email': person.email || '',
+    'Địa chỉ': person.address || '',
+    'Ngày vào làm': person.joinDate || '',
+    'Trạng thái': person.status || '',
+    'Số CCCD': person.cccd || '',
+    'Số sổ BHXH': person.bhxh || '',
+    'Lương': person.salary || '',
+    'Ngân hàng - STK': person.bank || '',
     'Ghi chú': person.note || ''
   };
 }
@@ -2044,7 +2277,7 @@ function exportExcel() {
     }));
   });
   const sheet = XLSX.utils.json_to_sheet(rows);
-  sheet['!cols'] = [{ wch: 20 }, { wch: 22 }, { wch: 22 }, { wch: 24 }, { wch: 28 }, { wch: 16 }, { wch: 28 }, { wch: 36 }];
+  sheet['!cols'] = [{ wch: 20 }, { wch: 22 }, { wch: 22 }, { wch: 24 }, { wch: 28 }, { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 28 }, { wch: 32 }, { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 24 }, { wch: 36 }];
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, 'Sơ đồ nhân sự');
   XLSX.writeFile(workbook, 'so-do-phan-cap.xlsx');
@@ -2054,9 +2287,19 @@ function personFromSpreadsheetRow(row) {
   return {
     name: String(row['Tên'] || '').trim(), photo: null,
     title: String(row['Chức danh chi tiết'] || '').trim(),
+    gender: String(row['Giới tính'] || '').trim(),
+    dob: String(row['Ngày sinh'] || '').trim(),
     phone: String(row['Điện thoại'] || '').trim(),
     email: String(row['Email'] || '').trim(),
-    note: String(row['Ghi chú'] || '').trim()
+    address: String(row['Địa chỉ'] || '').trim(),
+    joinDate: String(row['Ngày vào làm'] || '').trim(),
+    status: String(row['Trạng thái'] || '').trim() || 'Đang làm',
+    cccd: String(row['Số CCCD'] || '').trim(),
+    bhxh: String(row['Số sổ BHXH'] || '').trim(),
+    salary: String(row['Lương'] || '').trim(),
+    bank: String(row['Ngân hàng - STK'] || '').trim(),
+    note: String(row['Ghi chú'] || '').trim(),
+    degreeFiles: []
   };
 }
 
