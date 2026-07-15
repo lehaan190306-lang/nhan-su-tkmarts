@@ -41,21 +41,28 @@
     padding: 24px 16px 60px;
     -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1300px; margin: 0 auto; }
-  .org-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+  .wrap { max-width: 1360px; margin: 0 auto; }
+  .org-heading { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
   .company-logo { display: none; width: 44px; height: 44px; object-fit: contain; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-xs); }
   h1 { font-family: 'Lexend', 'Inter', sans-serif; font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: -0.01em; }
   .org-heading h1 { color: var(--text-primary); }
   .sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 20px; line-height: 1.5; }
   .toolbar {
-    display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: center;
-    background: rgba(255,255,255,0.6); border: 1px solid var(--border); border-radius: var(--radius-md);
-    padding: 8px; backdrop-filter: blur(6px);
+    position: sticky; top: 10px; z-index: 40;
+    display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; align-items: center;
+    background: rgba(255,255,255,0.72); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 8px; backdrop-filter: blur(10px) saturate(1.4); -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    transition: box-shadow .2s var(--ease-out), border-color .2s var(--ease-out), background .2s var(--ease-out);
   }
+  .toolbar.is-stuck { box-shadow: var(--shadow-md); border-color: var(--border-strong); background: rgba(255,255,255,0.92); }
+  .toolbar-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .toolbar-divider { width: 1px; align-self: stretch; min-height: 24px; background: var(--border-strong); margin: 0 3px; flex-shrink: 0; opacity: .8; }
+  .toolbar-spacer { flex: 1 1 auto; min-width: 0; }
   .toolbar button {
     height: 34px; padding: 0 14px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm);
     border: 1px solid var(--border-strong); background: var(--surface);
-    color: var(--text-primary); cursor: pointer; box-shadow: var(--shadow-xs);
+    color: var(--text-primary); cursor: pointer; box-shadow: var(--shadow-xs); white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 6px;
     transition: transform .12s var(--ease-out), box-shadow .12s var(--ease-out), background .12s var(--ease-out), border-color .12s var(--ease-out);
   }
   .toolbar button:hover { background: var(--brand-soft); border-color: #b7d3ec; color: var(--brand); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
@@ -64,7 +71,7 @@
   .toolbar button.danger:hover { background: #fbeeee; border-color: #e0b9b9; color: #a32d2d; }
   .zoom-group {
     display: flex; align-items: center; gap: 2px; border: 1px solid var(--border-strong);
-    border-radius: var(--radius-sm); padding: 3px; background: var(--surface); margin-left: auto; box-shadow: var(--shadow-xs);
+    border-radius: var(--radius-sm); padding: 3px; background: var(--surface); box-shadow: var(--shadow-xs); flex-shrink: 0;
   }
   .zoom-group button {
     height: 28px; width: 28px; border: none; background: transparent; border-radius: 6px;
@@ -277,11 +284,23 @@
   .search-input { width: 190px; }
   .is-filtered-out { display: none !important; }
   .profile-modal {
-    position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center;
-    padding: 20px; background: rgba(26, 27, 25, 0.38);
+    position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center;
+    padding: 20px; background: rgba(26, 27, 25, 0.38); backdrop-filter: blur(2px);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity .18s var(--ease-out), visibility 0s linear .18s;
   }
-  .profile-modal.is-open { display: flex; }
-  .profile-dialog { width: min(460px, 100%); background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 16px 44px rgba(0,0,0,0.2); }
+  .profile-modal.is-open {
+    opacity: 1; visibility: visible; pointer-events: auto;
+    transition: opacity .18s var(--ease-out), visibility 0s linear 0s;
+  }
+  .profile-dialog {
+    width: min(460px, 100%); background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 16px 44px rgba(0,0,0,0.2);
+    transform: translateY(10px) scale(.97); transition: transform .22s var(--ease-out);
+  }
+  .profile-modal.is-open .profile-dialog { transform: translateY(0) scale(1); }
+  @media (prefers-reduced-motion: reduce) {
+    .profile-modal, .profile-dialog { transition: none !important; }
+  }
   .profile-dialog h2 { font-size: 17px; margin: 0 0 16px; }
   .profile-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
   .profile-field label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
@@ -299,8 +318,46 @@
   .settings-preview.is-visible { display: block; }
   .settings-preview.bg-preview { object-fit: cover; border-radius: 6px; }
   .profile-dialog-lg { width: min(640px, 100%); max-height: 86vh; overflow-y: auto; }
-  .profile-section-title { font-size: 12px; font-weight: 700; color: var(--brand); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; border-top: 1px solid var(--border); padding-top: 14px; }
-  .profile-section-title.is-first { border-top: none; padding-top: 0; margin-top: 0; }
+
+  /* Đầu hồ sơ: ảnh đại diện + tên + trạng thái màu */
+  .profile-modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .profile-modal-avatar {
+    width: 52px; height: 52px; border-radius: 14px; overflow: hidden; flex-shrink: 0;
+    background: var(--brand-soft); display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border);
+  }
+  .profile-modal-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-modal-avatar svg { width: 26px; height: 26px; color: var(--brand); }
+  .profile-modal-title-wrap { min-width: 0; flex: 1; }
+  .profile-modal-title-wrap h2 { margin: 0; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .profile-modal-sub { font-size: 12.5px; color: var(--text-secondary); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700;
+    padding: 5px 12px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+  }
+  .status-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .status-pill[data-status="Đang làm"] { background: #e7f8ef; color: #0f9e66; }
+  .status-pill[data-status="Tạm nghỉ"] { background: #fff4e0; color: #b06a00; }
+  .status-pill[data-status="Đã nghỉ việc"] { background: #fdeaea; color: #a32d2d; }
+  .status-pill:not([data-status="Đang làm"]):not([data-status="Tạm nghỉ"]):not([data-status="Đã nghỉ việc"]) { background: #eef0f4; color: var(--text-muted); }
+
+  /* Trạng thái đổi màu ngay trên ô chọn để thấy rõ không cần đọc chữ */
+  .profile-field select#profile-status[data-status="Đang làm"] { border-color: #8fd9b6; background: #f3fdf8; color: #0f6e46; font-weight: 600; }
+  .profile-field select#profile-status[data-status="Tạm nghỉ"] { border-color: #f3cf8f; background: #fffaf0; color: #8a5300; font-weight: 600; }
+  .profile-field select#profile-status[data-status="Đã nghỉ việc"] { border-color: #eeb3b3; background: #fff5f5; color: #8a2323; font-weight: 600; }
+
+  /* Mỗi phần trong hồ sơ là một khối riêng, có biểu tượng, dễ phân biệt hơn thay vì chỉ có gạch ngang */
+  .profile-section { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px 4px; margin-bottom: 14px; background: #fbfbfe; }
+  .profile-section-title {
+    display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; color: var(--text-primary);
+    margin: 0 0 12px; text-transform: none; letter-spacing: 0; border-top: none; padding-top: 0;
+  }
+  .profile-section-title .section-icon {
+    width: 24px; height: 24px; border-radius: 8px; background: var(--brand-soft); color: var(--brand);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
+  }
+  .profile-section-title.is-first { margin-top: 0; }
+  .profile-field select#profile-status { transition: background .15s var(--ease-out), border-color .15s var(--ease-out), color .15s var(--ease-out); }
   .profile-field select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: #fff; }
   .file-link { font-size: 12px; color: var(--brand); text-decoration: none; }
   .file-link:not([href]) { color: var(--text-muted); cursor: default; }
@@ -393,6 +450,7 @@
   /* Menu "Thêm" gộp các nút ít dùng lại cho điện thoại đỡ rối */
   .toolbar-more { display: contents; }
   .mobile-more-toggle { display: none; }
+  .toolbar-search-group { display: flex; align-items: center; gap: 6px; }
   .history-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
   .history-list li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
   .history-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -405,6 +463,54 @@
   .history-time { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
   .history-empty { font-size: 13px; color: var(--text-secondary); padding: 8px 0; }
   .share-note { font-size: 12px; color: var(--text-secondary); margin: 10px 0 0; line-height: 1.4; }
+
+  /* ---- Toast thông báo, thay cho alert() ---- */
+  .toast-container {
+    position: fixed; top: 16px; right: 16px; z-index: 300;
+    display: flex; flex-direction: column; gap: 10px;
+    max-width: min(360px, calc(100vw - 32px));
+    pointer-events: none;
+  }
+  .toast {
+    pointer-events: auto; display: flex; align-items: flex-start; gap: 10px;
+    background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--border-strong);
+    border-radius: var(--radius-md); box-shadow: var(--shadow-lg); padding: 12px 12px 12px 14px;
+    position: relative; overflow: hidden; animation: toastIn .22s var(--ease-out) both;
+  }
+  .toast.is-leaving { animation: toastOut .18s ease forwards; }
+  .toast-icon {
+    width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; flex-shrink: 0; margin-top: 1px;
+  }
+  .toast-body { flex: 1; min-width: 0; }
+  .toast-message { font-size: 12.8px; line-height: 1.45; color: var(--text-primary); white-space: pre-line; word-break: break-word; }
+  .toast-close { border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 13px; line-height: 1; padding: 2px; flex-shrink: 0; border-radius: 5px; }
+  .toast-close:hover { color: var(--text-primary); background: var(--bg-page); }
+  .toast-progress { position: absolute; left: 0; bottom: 0; height: 3px; background: currentColor; opacity: .3; animation-name: toastProgress; animation-timing-function: linear; animation-fill-mode: forwards; }
+
+  .toast.type-error { border-left-color: #d64545; }
+  .toast.type-error .toast-icon, .toast.type-error .toast-progress { background: #fdeaea; color: #a32d2d; }
+  .toast.type-warning { border-left-color: #d98a1f; }
+  .toast.type-warning .toast-icon, .toast.type-warning .toast-progress { background: #fff4e0; color: #8a5300; }
+  .toast.type-success { border-left-color: #0f9e66; }
+  .toast.type-success .toast-icon, .toast.type-success .toast-progress { background: #e7f8ef; color: #0f9e66; }
+  .toast.type-info { border-left-color: var(--brand); }
+  .toast.type-info .toast-icon, .toast.type-info .toast-progress { background: var(--brand-soft); color: var(--brand); }
+
+  @keyframes toastIn { from { opacity: 0; transform: translateX(18px) scale(.96); } to { opacity: 1; transform: translateX(0) scale(1); } }
+  @keyframes toastOut { from { opacity: 1; transform: translateX(0) scale(1); max-height: 200px; margin-top: 0; } to { opacity: 0; transform: translateX(18px) scale(.96); } }
+  @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+
+  @media (max-width: 720px) {
+    .toast-container { left: 10px; right: 10px; top: auto; bottom: 14px; max-width: none; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(14px) scale(.97); } }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .toast { animation: none !important; }
+    .toast.is-leaving { animation: none !important; }
+    .toast-progress { animation: none !important; }
+  }
 
   /* ---- Hiệu ứng khi thêm / xóa nhân sự ---- */
   @keyframes cardEnter {
@@ -426,26 +532,61 @@
     .card.is-leaving, .group-block.is-leaving, .team-row.is-leaving { transition: none !important; }
   }
 
+  @keyframes toolbarDropdownIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   @media (max-width: 720px) {
-    body { padding: 16px 10px 34px; }
-    .toolbar { gap: 6px; }
-    .toolbar button, .lock-badge { min-height: 40px; }
-    .zoom-group { margin-left: 0; }
-    .search-input { width: min(100%, 230px); }
-    .viewport { padding: 16px; border-radius: 10px; max-height: 72vh; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+    body { padding: 12px 8px 30px; }
+    .org-heading { gap: 10px; margin-bottom: 2px; }
+    .company-logo { width: 36px; height: 36px; }
+    h1 { font-size: 18px; }
+    .sub { font-size: 12px; margin-bottom: 14px; }
+
+    .toolbar { top: 6px; gap: 6px; padding: 7px; border-radius: 12px; }
+    .toolbar button, .lock-badge { min-height: 40px; font-size: 12.5px; padding: 0 11px; }
+    .toolbar-divider { display: none; }
+    .toolbar-spacer { display: none; }
+    .zoom-hint { display: none; }
+
+    /* Thứ tự: badge/mở khóa → nút "Thêm" → cụm zoom → hàng tìm kiếm xuống dòng riêng */
+    .toolbar > .toolbar-group:last-of-type { order: 3; }
+    .toolbar-search-group { order: 2; flex: 1 1 100%; width: 100%; gap: 6px; }
+    .search-input { flex: 1 1 140px; width: auto; min-width: 0; }
+    .filter-select { flex: 1 1 120px; min-width: 0; }
+
+    .viewport { padding: 14px; border-radius: 12px; max-height: 68dvh; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
     .card.executive-card { width: 180px; }
     #org-root.layout-vertical .tier-header { flex-wrap: wrap; }
     #org-root.layout-vertical .groups-container { justify-content: flex-start; }
 
-    /* Trên điện thoại: chỉ hiện nút thiết yếu, gộp phần còn lại vào nút "Thêm" */
+    /* Trên điện thoại: chỉ hiện nút thiết yếu, gộp phần còn lại vào menu thả xuống "Thêm" */
     .mobile-more-toggle {
+      order: 1;
       display: inline-flex; align-items: center; justify-content: center;
-      height: 40px; padding: 0 12px; font-size: 13px; border-radius: 8px;
+      height: 40px; padding: 0 12px; font-size: 12.5px; border-radius: 8px;
       border: 1px dashed var(--border-strong); background: var(--surface); color: var(--text-secondary); cursor: pointer;
     }
+    .mobile-more-toggle.is-active { background: var(--brand-soft); border-color: #b7d3ec; border-style: solid; color: var(--brand); }
     .toolbar-more { display: none; }
-    .toolbar.show-more .toolbar-more { display: contents; }
+    .toolbar.show-more .toolbar-more {
+      display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+      position: absolute; left: 0; right: 0; top: calc(100% + 8px);
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg); padding: 10px; z-index: 60;
+      max-height: 62dvh; overflow-y: auto;
+      animation: toolbarDropdownIn .16s var(--ease-out) both;
+    }
+    .toolbar.show-more .toolbar-more .toolbar-group { flex-direction: column; align-items: stretch; gap: 6px; }
+    .toolbar.show-more .toolbar-more button { width: 100%; justify-content: flex-start; }
+    .toolbar.show-more .toolbar-more .toolbar-divider { display: block; width: auto; height: 1px; min-height: 0; margin: 2px 0; }
     .toolbar button, .toolbar .lock-badge, .toolbar .search-input, .toolbar .filter-select { flex: 0 0 auto; }
+  }
+
+  @media (max-width: 420px) {
+    .card { width: 122px; }
+    .card.executive-card { width: 158px; }
   }
 
   /* Ẩn giao diện mặc định của Google Translate, chỉ dùng nút riêng để bật/tắt */
@@ -466,47 +607,68 @@
 
 
   <div class="toolbar">
-    <span class="lock-badge is-view" id="lock-badge">🔒 Đang xem</span>
-    <button id="btn-toggle-edit">🔓 Mở khóa chỉnh sửa</button>
-    <button id="btn-rename-editor" style="display:none;" title="Đổi tên hiển thị trong lịch sử chỉnh sửa">✎ Tên của bạn</button>
-    <button id="btn-customize">Tùy chỉnh</button>
-    <button id="btn-copy-link" title="Link chỉ xem — ai có link đều xem được, không sửa được">🔗 Link chỉ xem</button>
-    <button id="btn-copy-edit-link" title="Link chỉnh sửa — người nhận vào là sửa được luôn, không cần nhập mật khẩu">🔑 Link chỉnh sửa</button>
-    <button id="btn-history" title="Xem ai đã chỉnh sửa và lúc nào">🕘 Lịch sử</button>
-    <button id="btn-toggle-layout" title="Đổi chiều hiển thị sơ đồ">↕ Chuyển sang dọc</button>
-    <button id="btn-collapse-all" title="Thu gọn tất cả bộ phận — dễ xem trên điện thoại">▾ Thu gọn tất cả</button>
-    <button id="btn-expand-all" title="Mở rộng tất cả bộ phận">▸ Mở tất cả</button>
-    <button id="btn-translate-en" title="Dịch toàn bộ sơ đồ sang tiếng Anh (dùng Google Dịch)">🌐 English</button>
+    <div class="toolbar-group">
+      <span class="lock-badge is-view" id="lock-badge">🔒 Đang xem</span>
+      <button id="btn-toggle-edit">🔓 Mở khóa chỉnh sửa</button>
+      <button id="btn-rename-editor" style="display:none;" title="Đổi tên hiển thị trong lịch sử chỉnh sửa">✎ Tên của bạn</button>
+    </div>
+
     <button id="btn-toggle-more" class="mobile-more-toggle" type="button">⋯ Thêm</button>
     <span class="toolbar-more" id="toolbar-more">
-      <button id="btn-download-image" title="Cần mở khóa chỉnh sửa mới tải được ảnh">Tải ảnh về máy (.png)</button>
-      <button id="btn-download-pdf" title="Cần mở khóa chỉnh sửa mới xuất được">Xuất PDF</button>
-      <button id="btn-export" title="Cần mở khóa chỉnh sửa mới xuất được">Xuất file (.json)</button>
-      <button id="btn-import">Nhập file (.json)</button>
-      <button id="btn-export-xlsx" title="Cần mở khóa chỉnh sửa mới xuất được">Xuất Excel</button>
-      <button id="btn-import-xlsx">Nhập Excel</button>
-      <button id="btn-reset" class="danger">Xóa hết, làm lại</button>
-      <input type="file" id="file-input" accept=".json">
-      <input type="file" id="file-input-xlsx" accept=".xlsx,.xls">
-      <span id="img-progress" style="font-size:12px;color:var(--text-muted);"></span>
-      <span class="drag-hint">↕ Mở khóa để kéo-thả thẻ</span>
+      <span class="toolbar-divider"></span>
+      <div class="toolbar-group">
+        <button id="btn-customize">🎨 Tùy chỉnh</button>
+        <button id="btn-copy-link" title="Link chỉ xem — ai có link đều xem được, không sửa được">🔗 Link chỉ xem</button>
+        <button id="btn-copy-edit-link" title="Link chỉnh sửa — người nhận vào là sửa được luôn, không cần nhập mật khẩu">🔑 Link chỉnh sửa</button>
+        <button id="btn-history" title="Xem ai đã chỉnh sửa và lúc nào">🕘 Lịch sử</button>
+      </div>
+      <span class="toolbar-divider"></span>
+      <div class="toolbar-group">
+        <button id="btn-toggle-layout" title="Đổi chiều hiển thị sơ đồ">↕ Chuyển sang dọc</button>
+        <button id="btn-collapse-all" title="Thu gọn tất cả bộ phận — dễ xem trên điện thoại">▾ Thu gọn tất cả</button>
+        <button id="btn-expand-all" title="Mở rộng tất cả bộ phận">▸ Mở tất cả</button>
+        <button id="btn-translate-en" title="Dịch toàn bộ sơ đồ sang tiếng Anh (dùng Google Dịch)">🌐 English</button>
+      </div>
+      <span class="toolbar-divider"></span>
+      <div class="toolbar-group">
+        <button id="btn-download-image" title="Cần mở khóa chỉnh sửa mới tải được ảnh">🖼️ Tải ảnh về máy (.png)</button>
+        <button id="btn-download-pdf" title="Cần mở khóa chỉnh sửa mới xuất được">📄 Xuất PDF</button>
+        <button id="btn-export" title="Cần mở khóa chỉnh sửa mới xuất được">⬇ Xuất file (.json)</button>
+        <button id="btn-import">⬆ Nhập file (.json)</button>
+        <button id="btn-export-xlsx" title="Cần mở khóa chỉnh sửa mới xuất được">⬇ Xuất Excel</button>
+        <button id="btn-import-xlsx">⬆ Nhập Excel</button>
+        <button id="btn-reset" class="danger">🗑 Xóa hết, làm lại</button>
+        <input type="file" id="file-input" accept=".json">
+        <input type="file" id="file-input-xlsx" accept=".xlsx,.xls">
+        <span id="img-progress" style="font-size:12px;color:var(--text-muted);"></span>
+        <span class="drag-hint">↕ Mở khóa để kéo-thả thẻ</span>
+      </div>
     </span>
-    <input id="search-input" class="search-input" type="search" placeholder="Tìm tên, email, phòng ban...">
-    <select id="filter-select" class="filter-select" aria-label="Lọc theo nhóm">
-      <option value="all">Tất cả vị trí</option>
-      <option value="executive">Cấp điều hành</option>
-      <option value="manager">Quản lý trung cấp</option>
-      <option value="deputy">Phó quản lý</option>
-      <option value="staff">Nhân viên</option>
-    </select>
-    <div class="zoom-group">
-      <button id="zoom-out" aria-label="Thu nhỏ">−</button>
-      <span class="zoom-label" id="zoom-label">100%</span>
-      <button id="zoom-in" aria-label="Phóng to">+</button>
-      <button id="zoom-reset" aria-label="Đặt lại 100%" style="width:auto;padding:0 8px;font-size:11px;">100%</button>
+
+    <span class="toolbar-spacer"></span>
+
+    <div class="toolbar-group toolbar-search-group">
+      <input id="search-input" class="search-input" type="search" placeholder="Tìm tên, email, phòng ban...">
+      <select id="filter-select" class="filter-select" aria-label="Lọc theo nhóm">
+        <option value="all">Tất cả vị trí</option>
+        <option value="executive">Cấp điều hành</option>
+        <option value="manager">Quản lý trung cấp</option>
+        <option value="deputy">Phó quản lý</option>
+        <option value="staff">Nhân viên</option>
+      </select>
     </div>
-    <span class="zoom-hint" style="font-size:11px;color:var(--text-muted);white-space:nowrap;">Giữ Ctrl + cuộn chuột để phóng to/thu nhỏ</span>
+    <span class="toolbar-divider"></span>
+    <div class="toolbar-group">
+      <div class="zoom-group">
+        <button id="zoom-out" aria-label="Thu nhỏ">−</button>
+        <span class="zoom-label" id="zoom-label">100%</span>
+        <button id="zoom-in" aria-label="Phóng to">+</button>
+        <button id="zoom-reset" aria-label="Đặt lại 100%" style="width:auto;padding:0 8px;font-size:11px;">100%</button>
+      </div>
+      <span class="zoom-hint" style="font-size:11px;color:var(--text-muted);white-space:nowrap;">Giữ Ctrl + cuộn chuột để phóng to/thu nhỏ</span>
+    </div>
   </div>
+
 
   <div class="viewport">
     <div id="org-root"></div>
@@ -561,6 +723,35 @@ try {
   firebaseReady = true;
 } catch (err) {
   console.error('Không khởi tạo được Firebase:', err);
+}
+
+// ---- Toast thông báo (thay cho alert() để không chặn thao tác) ----
+const toastContainer = document.createElement('div');
+toastContainer.className = 'toast-container';
+document.body.appendChild(toastContainer);
+const TOAST_ICONS = { error: '✕', warning: '⚠', success: '✓', info: 'ℹ' };
+const TOAST_DURATIONS = { error: 7000, warning: 6000, success: 4000, info: 4500 };
+function showToast(message, type = 'info', duration) {
+  const dur = duration === undefined ? (TOAST_DURATIONS[type] || 5000) : duration;
+  const toast = document.createElement('div');
+  toast.className = 'toast type-' + type;
+  toast.setAttribute('role', type === 'error' || type === 'warning' ? 'alert' : 'status');
+  toast.innerHTML =
+    '<span class="toast-icon">' + (TOAST_ICONS[type] || 'ℹ') + '</span>' +
+    '<div class="toast-body"><div class="toast-message"></div></div>' +
+    '<button type="button" class="toast-close" aria-label="Đóng thông báo">✕</button>' +
+    (dur ? '<span class="toast-progress" style="animation-duration:' + dur + 'ms;"></span>' : '');
+  toast.querySelector('.toast-message').textContent = message;
+  let timer = null;
+  const removeToast = () => {
+    if (!toast.isConnected) return;
+    toast.classList.add('is-leaving');
+    setTimeout(() => toast.remove(), 190);
+  };
+  toast.querySelector('.toast-close').onclick = removeToast;
+  toastContainer.appendChild(toast);
+  if (dur) timer = setTimeout(removeToast, dur);
+  return toast;
 }
 
 // Giới hạn dung lượng gốc cho tệp KHÔNG PHẢI ảnh (ví dụ PDF), vì không nén được như ảnh.
@@ -763,50 +954,85 @@ const profileModal = document.createElement('div');
 profileModal.className = 'profile-modal';
 profileModal.innerHTML =
   '<div class="profile-dialog profile-dialog-lg" role="dialog" aria-modal="true" aria-labelledby="profile-heading">' +
-    '<h2 id="profile-heading">Hồ sơ nhân sự</h2>' +
 
-    '<div class="profile-section-title is-first">Thông tin cơ bản</div>' +
-    '<div class="settings-grid">' +
-      '<div class="profile-field"><label for="profile-title">Chức danh chi tiết</label><input id="profile-title" type="text" placeholder="VD: Trưởng phòng Kinh doanh"></div>' +
-      '<div class="profile-field"><label for="profile-gender">Giới tính</label><select id="profile-gender"><option value="">-- Chọn --</option><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select></div>' +
-      '<div class="profile-field"><label for="profile-dob">Ngày sinh</label><input id="profile-dob" type="date"></div>' +
-      '<div class="profile-field"><label for="profile-phone">Số điện thoại</label><input id="profile-phone" type="tel" placeholder="VD: 0901 234 567"></div>' +
-      '<div class="profile-field"><label for="profile-email">Email</label><input id="profile-email" type="email" placeholder="VD: ten@congty.com"></div>' +
-      '<div class="profile-field full-width"><label for="profile-address">Địa chỉ</label><input id="profile-address" type="text" placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></div>' +
+    '<div class="profile-modal-header">' +
+      '<div class="profile-modal-avatar" id="profile-modal-avatar"></div>' +
+      '<div class="profile-modal-title-wrap">' +
+        '<h2 id="profile-heading">Hồ sơ nhân sự</h2>' +
+        '<div class="profile-modal-sub" id="profile-modal-sub">&nbsp;</div>' +
+      '</div>' +
+      '<span class="status-pill" id="profile-status-pill" data-status="Đang làm">Đang làm</span>' +
     '</div>' +
 
-    '<div class="profile-section-title">Thông tin công việc</div>' +
-    '<div class="settings-grid">' +
-      '<div class="profile-field"><label for="profile-join-date">Ngày vào làm</label><input id="profile-join-date" type="date"></div>' +
-      '<div class="profile-field"><label for="profile-status">Trạng thái</label><select id="profile-status"><option value="Đang làm">Đang làm</option><option value="Tạm nghỉ">Tạm nghỉ</option><option value="Đã nghỉ việc">Đã nghỉ việc</option></select></div>' +
+    '<div class="profile-section">' +
+      '<div class="profile-section-title is-first"><span class="section-icon">👤</span>Thông tin cơ bản</div>' +
+      '<div class="settings-grid">' +
+        '<div class="profile-field"><label for="profile-title">🏷️ Chức danh chi tiết</label><input id="profile-title" type="text" placeholder="VD: Trưởng phòng Kinh doanh"></div>' +
+        '<div class="profile-field"><label for="profile-gender">⚧ Giới tính</label><select id="profile-gender"><option value="">-- Chọn --</option><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select></div>' +
+        '<div class="profile-field"><label for="profile-dob">🎂 Ngày sinh</label><input id="profile-dob" type="date"></div>' +
+        '<div class="profile-field"><label for="profile-phone">📱 Số điện thoại</label><input id="profile-phone" type="tel" placeholder="VD: 0901 234 567"></div>' +
+        '<div class="profile-field"><label for="profile-email">✉️ Email</label><input id="profile-email" type="email" placeholder="VD: ten@congty.com"></div>' +
+        '<div class="profile-field full-width"><label for="profile-address">🏠 Địa chỉ</label><input id="profile-address" type="text" placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></div>' +
+      '</div>' +
     '</div>' +
 
-    '<div class="profile-section-title">Lương &amp; bảo hiểm &amp; giấy tờ tùy thân</div>' +
-    '<div class="settings-grid">' +
-      '<div class="profile-field"><label for="profile-cccd">Số CCCD</label><input id="profile-cccd" type="text"></div>' +
-      '<div class="profile-field"><label for="profile-bhxh">Số sổ BHXH</label><input id="profile-bhxh" type="text"></div>' +
-      '<div class="profile-field"><label for="profile-salary">Lương (VNĐ)</label><input id="profile-salary" type="text" placeholder="VD: 12.000.000"></div>' +
-      '<div class="profile-field"><label for="profile-bank">Ngân hàng - Số tài khoản</label><input id="profile-bank" type="text" placeholder="VD: Vietcombank - 0123456789"></div>' +
+    '<div class="profile-section">' +
+      '<div class="profile-section-title"><span class="section-icon">💼</span>Thông tin công việc</div>' +
+      '<div class="settings-grid">' +
+        '<div class="profile-field"><label for="profile-join-date">📅 Ngày vào làm</label><input id="profile-join-date" type="date"></div>' +
+        '<div class="profile-field"><label for="profile-status">🟢 Trạng thái</label><select id="profile-status"><option value="Đang làm">Đang làm</option><option value="Tạm nghỉ">Tạm nghỉ</option><option value="Đã nghỉ việc">Đã nghỉ việc</option></select></div>' +
+      '</div>' +
     '</div>' +
 
-    '<div class="profile-section-title">Tệp đính kèm</div>' +
-    '<div class="profile-field full-width"><label>CCCD (scan mặt trước/sau)</label>' +
-      '<div class="settings-upload-row"><button type="button" id="btn-upload-cccd">Tải tệp lên</button><a id="link-cccd" class="file-link" href="#">Chưa có tệp</a><button type="button" id="btn-remove-cccd" class="file-remove-btn" style="display:none;">✕ Xóa</button></div>' +
+    '<div class="profile-section">' +
+      '<div class="profile-section-title"><span class="section-icon">💰</span>Lương &amp; bảo hiểm &amp; giấy tờ tùy thân</div>' +
+      '<div class="settings-grid">' +
+        '<div class="profile-field"><label for="profile-cccd">🪪 Số CCCD</label><input id="profile-cccd" type="text"></div>' +
+        '<div class="profile-field"><label for="profile-bhxh">🛡️ Số sổ BHXH</label><input id="profile-bhxh" type="text"></div>' +
+        '<div class="profile-field"><label for="profile-salary">💵 Lương (VNĐ)</label><input id="profile-salary" type="text" placeholder="VD: 12.000.000"></div>' +
+        '<div class="profile-field"><label for="profile-bank">🏦 Ngân hàng - Số tài khoản</label><input id="profile-bank" type="text" placeholder="VD: Vietcombank - 0123456789"></div>' +
+      '</div>' +
     '</div>' +
-    '<div class="profile-field full-width"><label>Hợp đồng lao động (scan)</label>' +
-      '<div class="settings-upload-row"><button type="button" id="btn-upload-contract">Tải tệp lên</button><a id="link-contract" class="file-link" href="#">Chưa có tệp</a><button type="button" id="btn-remove-contract" class="file-remove-btn" style="display:none;">✕ Xóa</button></div>' +
-    '</div>' +
-    '<div class="profile-field full-width"><label>Bằng cấp / chứng chỉ (có thể thêm nhiều tệp)</label>' +
-      '<div class="settings-upload-row"><button type="button" id="btn-upload-degree">+ Thêm tệp</button></div>' +
-      '<ul id="degree-file-list" class="file-list"></ul>' +
-    '</div>' +
-    '<div id="attachment-preview" class="attachment-preview"></div>' +
 
-    '<div class="profile-field full-width"><label for="profile-note">Ghi chú</label><textarea id="profile-note" placeholder="Thông tin thêm..."></textarea></div>' +
+    '<div class="profile-section">' +
+      '<div class="profile-section-title"><span class="section-icon">📎</span>Tệp đính kèm</div>' +
+      '<div class="profile-field full-width"><label>🪪 CCCD (scan mặt trước/sau)</label>' +
+        '<div class="settings-upload-row"><button type="button" id="btn-upload-cccd">Tải tệp lên</button><a id="link-cccd" class="file-link" href="#">Chưa có tệp</a><button type="button" id="btn-remove-cccd" class="file-remove-btn" style="display:none;">✕ Xóa</button></div>' +
+      '</div>' +
+      '<div class="profile-field full-width"><label>📄 Hợp đồng lao động (scan)</label>' +
+        '<div class="settings-upload-row"><button type="button" id="btn-upload-contract">Tải tệp lên</button><a id="link-contract" class="file-link" href="#">Chưa có tệp</a><button type="button" id="btn-remove-contract" class="file-remove-btn" style="display:none;">✕ Xóa</button></div>' +
+      '</div>' +
+      '<div class="profile-field full-width"><label>🎓 Bằng cấp / chứng chỉ (có thể thêm nhiều tệp)</label>' +
+        '<div class="settings-upload-row"><button type="button" id="btn-upload-degree">+ Thêm tệp</button></div>' +
+        '<ul id="degree-file-list" class="file-list"></ul>' +
+      '</div>' +
+      '<div id="attachment-preview" class="attachment-preview"></div>' +
+    '</div>' +
+
+    '<div class="profile-section">' +
+      '<div class="profile-section-title"><span class="section-icon">📝</span>Ghi chú</div>' +
+      '<div class="profile-field full-width"><textarea id="profile-note" placeholder="Thông tin thêm..."></textarea></div>' +
+    '</div>' +
+
     '<div id="profile-upload-status" class="upload-status"></div>' +
     '<div class="profile-actions"><button type="button" class="close-profile">Đóng</button><button type="button" class="save-profile">Lưu hồ sơ</button></div>' +
   '</div>';
 document.body.appendChild(profileModal);
+
+// Trạng thái đổi màu ngay khi chọn — cả ô chọn và huy hiệu ở đầu hồ sơ
+function updateProfileStatusVisual(status) {
+  const value = status || 'Đang làm';
+  profileModal.querySelector('#profile-status').setAttribute('data-status', value);
+  const pill = profileModal.querySelector('#profile-status-pill');
+  pill.setAttribute('data-status', value);
+  pill.textContent = value;
+}
+profileModal.querySelector('#profile-status').addEventListener('change', (e) => updateProfileStatusVisual(e.target.value));
+profileModal.querySelector('#profile-title').addEventListener('input', (e) => {
+  profileModal.querySelector('#profile-modal-sub').textContent = e.target.value || 'Chưa cập nhật chức danh';
+});
+
+
 
 // Ba input file ẩn dùng chung cho việc chọn tệp CCCD / hợp đồng / bằng cấp
 const fileInputCccd = document.createElement('input');
@@ -945,10 +1171,13 @@ async function openProfile(person) {
     const pass = prompt('Sơ đồ này giới hạn xem chi tiết hồ sơ. Nhập mật khẩu để xem và chỉnh sửa:');
     if (pass === null || pass === '') return;
     const ok = await checkEditPassword(pass);
-    if (!ok) { alert('Sai mật khẩu.'); return; }
+    if (!ok) { showToast('Sai mật khẩu.', 'error'); return; }
     activateEditMode('profile');
   }
   profileTarget = ensurePersonProfile(person);
+  profileModal.querySelector('#profile-heading').textContent = person.name || 'Hồ sơ nhân sự';
+  profileModal.querySelector('#profile-modal-sub').textContent = profileTarget.title || 'Chưa cập nhật chức danh';
+  profileModal.querySelector('#profile-modal-avatar').innerHTML = person.photo ? '<img src="' + person.photo + '" alt="Ảnh đại diện">' : userIcon();
   profileModal.querySelector('#profile-title').value = profileTarget.title;
   profileModal.querySelector('#profile-gender').value = profileTarget.gender || '';
   profileModal.querySelector('#profile-dob').value = profileTarget.dob || '';
@@ -957,6 +1186,7 @@ async function openProfile(person) {
   profileModal.querySelector('#profile-address').value = profileTarget.address || '';
   profileModal.querySelector('#profile-join-date').value = profileTarget.joinDate || '';
   profileModal.querySelector('#profile-status').value = profileTarget.status || 'Đang làm';
+  updateProfileStatusVisual(profileTarget.status || 'Đang làm');
   profileModal.querySelector('#profile-cccd').value = profileTarget.cccd || '';
   profileModal.querySelector('#profile-bhxh').value = profileTarget.bhxh || '';
   profileModal.querySelector('#profile-salary').value = profileTarget.salary || '';
@@ -999,6 +1229,7 @@ profileModal.querySelector('.save-profile').onclick = () => {
   closeProfile();
   render();
   saveState({ action: 'Cập nhật hồ sơ nhân sự đầy đủ' });
+  showToast('Đã lưu hồ sơ nhân sự.', 'success');
 };
 profileModal.addEventListener('click', (event) => { if (event.target === profileModal) closeProfile(); });
 
@@ -1101,7 +1332,7 @@ settingsLogoFileInput.onchange = async (e) => {
   try {
     pendingLogoDataUrl = await compressImageFile(file, 400, 'image/png', 0.9);
   } catch (err) {
-    alert('Không xử lý được ảnh logo: ' + err.message);
+    showToast('Không xử lý được ảnh logo: ' + err.message, 'error');
     return;
   }
   settingsModal.querySelector('#setting-logo-url').value = '';
@@ -1119,7 +1350,7 @@ settingsBgFileInput.onchange = async (e) => {
   try {
     pendingBgDataUrl = await compressImageFile(file, 1600, 'image/jpeg', 0.7);
   } catch (err) {
-    alert('Không xử lý được ảnh nền: ' + err.message);
+    showToast('Không xử lý được ảnh nền: ' + err.message, 'error');
     return;
   }
   settingsModal.querySelector('#setting-bg-url').value = '';
@@ -1185,7 +1416,7 @@ settingsModal.addEventListener('click', (event) => { if (event.target === settin
 function guardEdit(fn) {
   return function (...args) {
     if (!editMode) {
-      alert('Sơ đồ đang ở chế độ chỉ xem. Bấm "Mở khóa chỉnh sửa" và nhập mật khẩu để sửa.');
+      showToast('Sơ đồ đang ở chế độ chỉ xem. Bấm "Mở khóa chỉnh sửa" và nhập mật khẩu để sửa.', 'warning');
       return;
     }
     return fn.apply(this, args);
@@ -1197,7 +1428,7 @@ async function checkEditPassword(pass) {
   if (!firebaseReady || !auth) {
     // Không có kết nối Internet/Firebase: không thể xác thực thật, nên KHÔNG cho sửa
     // (tránh trường hợp "sửa tạm" rồi tưởng đã lưu, trong khi thực ra dữ liệu không đồng bộ được).
-    alert('Không kết nối được với máy chủ để xác thực. Hãy kiểm tra lại mạng và thử lại.');
+    showToast('Không kết nối được với máy chủ để xác thực. Hãy kiểm tra lại mạng và thử lại.', 'error');
     return false;
   }
   try {
@@ -1234,7 +1465,7 @@ document.getElementById('btn-toggle-edit').onclick = async () => {
 
   const ok = await checkEditPassword(pass);
   if (!ok) {
-    alert('Sai mật khẩu.');
+    showToast('Sai mật khẩu.', 'error');
     return;
   }
   activateEditMode('password');
@@ -1378,7 +1609,7 @@ function saveState(options = {}) {
       setStatus('⚠️ Đã lưu tạm trên máy này (chưa có đám mây để đồng bộ cho người khác).');
     } catch (err) {
       setStatus('Không lưu được: ' + err.message);
-      alert('Không lưu được trên máy này (có thể do ảnh vừa chọn quá lớn). Hãy thử chọn ảnh khác hoặc dung lượng nhỏ hơn.');
+      showToast('Không lưu được trên máy này (có thể do ảnh vừa chọn quá lớn). Hãy thử chọn ảnh khác hoặc dung lượng nhỏ hơn.', 'error');
     }
     return;
   }
@@ -1407,9 +1638,10 @@ function saveState(options = {}) {
     } catch (err) {
       setStatus('Không lưu được lên đám mây: ' + err.message);
       const sizeIssue = /longer than|exceeds|too large|invalid-argument|resource-exhausted/i.test(err.message || '');
-      alert(
-        'Không lưu được lên đám mây.\n\nLý do: ' + err.message +
-        (sizeIssue ? '\n\nCó thể ảnh bạn vừa tải lên quá lớn. Hãy thử chọn ảnh khác hoặc ảnh có dung lượng nhỏ hơn.' : '')
+      showToast(
+        'Không lưu được lên đám mây.\nLý do: ' + err.message +
+        (sizeIssue ? '\nCó thể ảnh bạn vừa tải lên quá lớn. Hãy thử chọn ảnh khác hoặc ảnh có dung lượng nhỏ hơn.' : ''),
+        'error'
       );
     }
   }, 300);
@@ -2113,7 +2345,7 @@ document.getElementById('btn-copy-edit-link').onclick = async () => {
   const pass = prompt('Nhập mật khẩu chỉnh sửa để tạo link mời chỉnh sửa:');
   if (pass === null || pass === '') return;
   const ok = await checkEditPassword(pass);
-  if (!ok) { alert('Sai mật khẩu.'); return; }
+  if (!ok) { showToast('Sai mật khẩu.', 'error'); return; }
   const link = cleanShareUrl() + '#edit=' + encodeURIComponent(pass);
   const copied = await copyTextToClipboard(link);
   if (copied) setStatus('Đã sao chép link chỉnh sửa — chỉ gửi cho người bạn tin tưởng.');
@@ -2129,11 +2361,34 @@ document.getElementById('btn-collapse-all').onclick = () => setAllGroupsCollapse
 document.getElementById('btn-expand-all').onclick = () => setAllGroupsCollapsed(false);
 
 // ---- Menu "Thêm" gọn cho điện thoại ----
-document.getElementById('btn-toggle-more').onclick = () => {
-  const toolbar = document.querySelector('.toolbar');
-  const isOpen = toolbar.classList.toggle('show-more');
-  document.getElementById('btn-toggle-more').textContent = isOpen ? '⋯ Ẩn bớt' : '⋯ Thêm';
-};
+const toolbarEl = document.querySelector('.toolbar');
+const moreToggleBtn = document.getElementById('btn-toggle-more');
+function setMoreMenuOpen(open) {
+  toolbarEl.classList.toggle('show-more', open);
+  moreToggleBtn.classList.toggle('is-active', open);
+  moreToggleBtn.textContent = open ? '⋯ Ẩn bớt' : '⋯ Thêm';
+  moreToggleBtn.setAttribute('aria-expanded', String(open));
+}
+moreToggleBtn.setAttribute('aria-expanded', 'false');
+moreToggleBtn.onclick = () => setMoreMenuOpen(!toolbarEl.classList.contains('show-more'));
+// Bấm ra ngoài hoặc nhấn Esc để đóng menu "Thêm"
+document.addEventListener('click', (e) => {
+  if (!toolbarEl.classList.contains('show-more')) return;
+  if (toolbarEl.contains(e.target)) return;
+  setMoreMenuOpen(false);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && toolbarEl.classList.contains('show-more')) setMoreMenuOpen(false);
+});
+// Đổ bóng cho thanh công cụ khi cuộn trang (thanh dùng position: sticky)
+if ('IntersectionObserver' in window) {
+  const stickySentinel = document.createElement('div');
+  stickySentinel.style.cssText = 'height:1px;';
+  toolbarEl.parentElement.insertBefore(stickySentinel, toolbarEl);
+  new IntersectionObserver(([entry]) => {
+    toolbarEl.classList.toggle('is-stuck', !entry.isIntersecting);
+  }, { threshold: 0 }).observe(stickySentinel);
+}
 
 // ---- Lịch sử chỉnh sửa: xem ai vừa sửa và lúc nào ----
 const historyModal = document.createElement('div');
@@ -2238,14 +2493,14 @@ avatarFileInput.onchange = async (e) => {
     // hợp trong lúc người dùng đang chọn file, dữ liệu đã được đồng bộ mới từ đám mây về.
     const target = findPersonById(pendingAvatarTarget);
     if (!target) {
-      alert('Không tìm thấy người này trong dữ liệu hiện tại (có thể dữ liệu vừa được cập nhật). Vui lòng thử bấm lại vào ảnh đại diện và chọn ảnh lần nữa.');
+      showToast('Không tìm thấy người này trong dữ liệu hiện tại (có thể dữ liệu vừa được cập nhật). Vui lòng thử bấm lại vào ảnh đại diện và chọn ảnh lần nữa.', 'warning');
     } else {
       target.photo = compressed;
       render();
       saveState({ action: 'Đổi ảnh đại diện: ' + (target.name || '(trống)') });
     }
   } catch (err) {
-    alert('Không xử lý được ảnh: ' + err.message);
+    showToast('Không xử lý được ảnh: ' + err.message, 'error');
   }
   pendingAvatarTarget = null;
   avatarFileInput.value = '';
@@ -2317,7 +2572,7 @@ document.getElementById('btn-download-image').onclick = guardEdit(async () => {
 });
 
 document.getElementById('btn-download-pdf').onclick = guardEdit(async () => {
-  if (!window.jspdf?.jsPDF) { alert('Chưa tải được thư viện PDF. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
+  if (!window.jspdf?.jsPDF) { showToast('Chưa tải được thư viện PDF. Hãy kiểm tra kết nối mạng rồi thử lại.', 'error'); return; }
   const btn = document.getElementById('btn-download-pdf');
   const progress = document.getElementById('img-progress');
   btn.disabled = true;
@@ -2381,7 +2636,7 @@ function spreadsheetRow(level, person, dept = '', managerName = '') {
 }
 
 function exportExcel() {
-  if (!window.XLSX) { alert('Chưa tải được thư viện Excel. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
+  if (!window.XLSX) { showToast('Chưa tải được thư viện Excel. Hãy kiểm tra kết nối mạng rồi thử lại.', 'error'); return; }
   const rows = [];
   FLAT_TIERS_TOP.forEach((tier) => state[tier.id].forEach((person) => rows.push(spreadsheetRow(tier.title, person))));
   state.t4.forEach((manager) => {
@@ -2481,7 +2736,7 @@ document.getElementById('file-input-xlsx').onchange = (event) => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       importExcelRows(XLSX.utils.sheet_to_json(sheet, { defval: '' }));
     } catch (err) {
-      alert('Không đọc được tệp Excel. Hãy dùng tệp được xuất từ sơ đồ này hoặc kiểm tra lại cột dữ liệu.');
+      showToast('Không đọc được tệp Excel. Hãy dùng tệp được xuất từ sơ đồ này hoặc kiểm tra lại cột dữ liệu.', 'error');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2513,7 +2768,7 @@ document.getElementById('file-input').onchange = (e) => {
       render();
       saveState({ action: 'Nhập dữ liệu từ tệp JSON' });
     } catch (err) {
-      alert('File không hợp lệ.');
+      showToast('File không hợp lệ.', 'error');
     }
   };
   reader.readAsText(file);
@@ -2583,7 +2838,7 @@ loadState();
     script.id = 'google-translate-script';
     script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
     script.onerror = function () {
-      alert('Không tải được Google Dịch. Hãy kiểm tra kết nối mạng rồi thử lại.');
+      showToast('Không tải được Google Dịch. Hãy kiểm tra kết nối mạng rồi thử lại.', 'error');
     };
     document.body.appendChild(script);
   }
