@@ -137,6 +137,41 @@
   }
   .card:hover .profile-btn, .card:focus-within .profile-btn { opacity: 1; }
   .profile-btn:hover { background: var(--brand-soft); color: var(--brand); }
+  .flag-btn {
+    display: none; align-items: center; gap: 4px; margin: -2px 0 2px; padding: 3px 9px;
+    border-radius: 999px; font-size: 10.5px; font-weight: 700; white-space: nowrap;
+    border: 1px solid transparent; cursor: pointer;
+    transition: background .12s var(--ease-out), color .12s var(--ease-out), opacity .12s var(--ease-out);
+  }
+  .flag-btn .flag-icon { display: flex; }
+  .flag-btn .flag-icon svg { width: 12px; height: 12px; display: block; }
+  /* Tự động hiện TỰ ĐỘNG (không cần hover) khi thiếu thông tin bắt buộc và chưa xác nhận. */
+  .flag-btn.is-warning {
+    display: flex; color: #8a6d1f; background: #fff3cd; border-color: #f0c14b;
+  }
+  .flag-btn.is-warning:hover { background: #ffe9a8; }
+  .flag-btn.is-warning:disabled { opacity: 1; cursor: default; color: #8a6d1f; background: #fff3cd; }
+  /* Đã bấm "xác nhận hoàn thành" dù còn thiếu — chỉ hiện nhãn xám nhạt khi rê chuột vào, để không gây rối mắt. */
+  .flag-btn.is-confirmed {
+    display: flex; opacity: 0; color: var(--text-muted); background: #f2f3f5; border-color: var(--border);
+  }
+  .card:hover .flag-btn.is-confirmed, .card:focus-within .flag-btn.is-confirmed { opacity: 1; }
+  .flag-btn.is-confirmed:hover { background: #e9ebf0; color: var(--text-secondary); }
+  .flag-btn.is-hidden { display: none; }
+  .flag-btn .flag-text { display: inline; }
+  /* Thẻ được đánh dấu "cần dò lại": nổi bật màu vàng để kế toán/quản lý biết cần kiểm tra lại thông tin. */
+  .card.is-flagged {
+    border-color: #f0c14b;
+    background: #fffaf0;
+    box-shadow: 0 0 0 2px rgba(240, 193, 75, 0.45), var(--shadow-sm);
+  }
+  .card.is-flagged::before { background: linear-gradient(90deg, #f0c14b, #fde8b4); }
+  .card.is-flagged:hover:not(.is-dragging) { box-shadow: 0 0 0 2px rgba(240, 193, 75, 0.6), var(--shadow-md); border-color: #e0ad2f; }
+  .card-flag-badge {
+    position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; border-radius: 50%;
+    background: #f7b500; color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 5px rgba(184, 134, 11, 0.4); border: 2px solid #fff; pointer-events: none;
+  }
   .avatar {
     width: 56px; height: 56px; border-radius: 50%;
     background: var(--card-accent-soft, #f2f3f5);
@@ -246,7 +281,7 @@
     text-transform: uppercase; letter-spacing: 0.04em;
   }
   .team-row {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 7px 8px;
+    display: flex; align-items: center; gap: 5px; margin-bottom: 8px; padding: 6px 6px;
     border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border);
     transition: box-shadow .16s var(--ease-out), border-color .16s var(--ease-out), transform .16s var(--ease-out);
   }
@@ -256,7 +291,7 @@
   .card.is-drop-target, .team-row.is-drop-target { outline: 2px dashed var(--brand); outline-offset: 3px; }
   .team-col-body.is-drop-target { background: var(--brand-soft); border-radius: 8px; }
   .avatar-sm {
-    width: 40px; height: 40px; border-radius: 50%; background: #ffffff;
+    width: 34px; height: 34px; border-radius: 50%; background: #ffffff;
     border: 2px dashed var(--border-strong); display: flex; align-items: center; justify-content: center;
     color: var(--text-muted); overflow: hidden; cursor: pointer; flex-shrink: 0;
     box-shadow: var(--shadow-xs);
@@ -264,23 +299,43 @@
   }
   .avatar-sm:hover { transform: scale(1.08); }
   .avatar-sm img { width: 100%; height: 100%; object-fit: cover; }
-  .avatar-sm svg { width: 20px; height: 20px; }
+  .avatar-sm svg { width: 17px; height: 17px; }
   .team-row input {
-    flex: 1; height: 30px; font-size: 13px; font-weight: 500; padding: 0 7px; border-radius: 6px;
+    flex: 1; height: 30px; font-size: 13px; font-weight: 500; padding: 0 5px; border-radius: 6px;
     border: 1px solid transparent; background: transparent; min-width: 0; color: var(--text-primary);
     transition: background .12s var(--ease-out), border-color .12s var(--ease-out);
   }
   .team-row input:hover { background: #f2f3f5; }
   .team-row input:focus { outline: none; border-color: var(--brand); background: #fff; box-shadow: 0 0 0 3px var(--brand-soft); }
   .team-row button {
-    width: 24px; height: 24px; border: none; background: transparent; color: var(--text-muted);
-    cursor: pointer; font-size: 13px; border-radius: 6px; flex-shrink: 0;
+    width: 20px; height: 20px; border: none; background: transparent; color: var(--text-muted);
+    cursor: pointer; font-size: 12px; border-radius: 6px; flex-shrink: 0;
     transition: background .12s var(--ease-out), color .12s var(--ease-out);
   }
   .team-row button:hover { background: #fbeeee; color: #a32d2d; }
-  .team-row .profile-btn { position: static; width: 24px; height: 24px; flex-shrink: 0; }
+  .team-row .profile-btn { position: static; width: 20px; height: 20px; flex-shrink: 0; }
   .team-row .profile-btn:hover { background: var(--brand-soft); color: var(--brand); }
   .team-row .profile-btn { opacity: 1; }
+  .flag-btn-sm {
+    width: 20px; height: 20px; border: none; background: transparent;
+    cursor: pointer; border-radius: 6px; flex-shrink: 0;
+    display: none; align-items: center; justify-content: center;
+    transition: background .12s var(--ease-out), color .12s var(--ease-out), opacity .12s var(--ease-out);
+  }
+  .flag-btn-sm svg { width: 12px; height: 12px; display: block; }
+  .flag-btn-sm.is-warning { display: flex; color: #b8860b; background: #fff3cd; opacity: 1; }
+  .flag-btn-sm.is-warning:hover { background: #ffe9a8; }
+  .flag-btn-sm.is-warning:disabled { opacity: 1; color: #b8860b; background: #fff3cd; }
+  .flag-btn-sm.is-confirmed { display: flex; color: var(--text-muted); background: transparent; opacity: 0; }
+  .team-row:hover .flag-btn-sm.is-confirmed, .team-row:focus-within .flag-btn-sm.is-confirmed { opacity: 1; }
+  .flag-btn-sm.is-confirmed:hover { background: #eef0f3; color: var(--text-secondary); }
+  .flag-btn-sm.is-hidden { display: none; }
+  /* Hàng nhân viên/phó quản lý thiếu thông tin bắt buộc: nổi vàng TỰ ĐỘNG, không cần hover. */
+  .team-row.is-flagged {
+    background: #fffaf0; border-color: #f0c14b;
+    box-shadow: 0 0 0 2px rgba(240, 193, 75, 0.4);
+  }
+  .team-row.is-flagged:hover:not(.is-dragging) { box-shadow: 0 0 0 2px rgba(240, 193, 75, 0.55); border-color: #e0ad2f; }
   .team-col .add-mini { width: 100%; margin-top: 4px; height: 30px; font-size: 12px; }
 
   .status { font-size: 12px; color: var(--text-muted); text-align: right; margin-top: 12px; min-height: 16px; }
@@ -463,7 +518,7 @@
   body.view-mode .group-remove,
   body.view-mode .tier-add,
   body.view-mode .add-mini,
-  body.view-mode .team-row button:not(.profile-btn),
+  body.view-mode .team-row button:not(.profile-btn):not(.flag-btn-sm),
   body.view-mode #btn-reset,
   body.view-mode #btn-import,
   body.view-mode #btn-import-xlsx,
@@ -936,12 +991,28 @@ function ensurePersonProfile(person) {
     if (typeof person[key] !== 'string') person[key] = '';
   });
   if (!person.status) person.status = 'Đang làm';
+  if (typeof person.confirmedComplete !== 'boolean') person.confirmedComplete = false;
   if (!Array.isArray(person.degreeFiles)) person.degreeFiles = [];
   // Mỗi người cần một ID cố định để tra cứu lại đúng người đó sau này (ví dụ khi
   // đang mở hộp thoại chọn ảnh mà dữ liệu vừa được đồng bộ mới từ đám mây về —
   // nếu chỉ giữ tham chiếu object cũ thì ảnh sẽ bị gán "lạc" vào dữ liệu cũ đã bị thay thế).
   if (typeof person.id !== 'string' || !person.id) person.id = genPersonId();
   return person;
+}
+
+// Các trường bắt buộc để coi là "đủ thông tin" (theo yêu cầu: Tên, SĐT, CCCD, Lương, Ngân hàng —
+// đầy đủ hồ sơ kế toán cần để làm lương/giấy tờ).
+const REQUIRED_INFO_FIELDS = ['name', 'phone', 'cccd', 'salary', 'bank'];
+function isPersonInfoIncomplete(person) {
+  return REQUIRED_INFO_FIELDS.some((key) => {
+    const v = person[key];
+    return !v || !String(v).trim();
+  });
+}
+// Có cần hiện cảnh báo vàng hay không: thiếu thông tin bắt buộc VÀ chưa được xác nhận
+// hoàn thành thủ công (nút "Đã xác nhận đủ" cho phép bỏ qua cảnh báo dù còn thiếu trường nào đó).
+function needsInfoReview(person) {
+  return isPersonInfoIncomplete(person) && !person.confirmedComplete;
 }
 
 // Tìm đúng người (theo id) trong dữ liệu HIỆN TẠI (mới nhất) — dùng thay cho việc giữ
@@ -1722,6 +1793,17 @@ function userIcon() {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>';
 }
 
+// Icon cảnh báo hình tam giác, tô màu bằng currentColor (khác với emoji ⚠️ vốn luôn có màu
+// vàng cam cố định của hệ điều hành khiến ô CHƯA đánh dấu cũng trông giống như đã bị đánh dấu).
+function warnIcon() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 22 20.5H2Z"/><path d="M12 9.5v4.2"/><circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none"/></svg>';
+}
+
+// Icon dấu tick, dùng khi người dùng bấm "Đã xác nhận hoàn thành" dù hồ sơ còn thiếu trường nào đó.
+function checkIcon() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 5"/></svg>';
+}
+
 function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
   ensurePersonProfile(person);
   const card = document.createElement('div');
@@ -1729,6 +1811,37 @@ function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
   if (tierTitle !== T4.title) card.classList.add('executive-card');
   card.dataset.personSearch = personSearchText(person, tierTitle);
   card.dataset.personGroup = tierTitle === T4.title ? 'manager' : 'executive';
+
+  const flagBtn = document.createElement('button');
+  flagBtn.type = 'button';
+  flagBtn.setAttribute('aria-label', 'Trạng thái thông tin hồ sơ');
+  function refreshFlagState() {
+    const incomplete = isPersonInfoIncomplete(person);
+    if (!incomplete && person.confirmedComplete) person.confirmedComplete = false; // đã đủ TT nên không cần cờ xác nhận nữa
+    const needsReview = incomplete && !person.confirmedComplete;
+    const confirmedIncomplete = incomplete && person.confirmedComplete;
+    card.classList.toggle('is-flagged', needsReview);
+    if (needsReview) {
+      flagBtn.className = 'flag-btn is-warning';
+      flagBtn.innerHTML = '<span class="flag-icon">' + warnIcon() + '</span><span class="flag-text">Thiếu thông tin</span>';
+      flagBtn.title = 'Thiếu Tên/SĐT/CCCD/Lương/Ngân hàng. Bấm để xác nhận đã hoàn thành (bỏ qua cảnh báo).';
+    } else if (confirmedIncomplete) {
+      flagBtn.className = 'flag-btn is-confirmed';
+      flagBtn.innerHTML = '<span class="flag-icon">' + checkIcon() + '</span><span class="flag-text">Đã xác nhận</span>';
+      flagBtn.title = 'Vẫn còn thiếu thông tin nhưng đã được xác nhận hoàn thành. Bấm để hiện lại cảnh báo.';
+    } else {
+      flagBtn.className = 'flag-btn is-hidden';
+      flagBtn.innerHTML = '';
+      flagBtn.title = '';
+    }
+  }
+  refreshFlagState();
+  flagBtn.onclick = (event) => {
+    event.stopPropagation();
+    person.confirmedComplete = !person.confirmedComplete;
+    refreshFlagState();
+    saveState({ action: (person.confirmedComplete ? 'Xác nhận hoàn thành hồ sơ: ' : 'Bỏ xác nhận, cần dò lại: ') + (person.name || '(trống)') });
+  };
 
   const removeBtn = document.createElement('button');
   removeBtn.className = 'remove';
@@ -1778,6 +1891,7 @@ function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
   titleLabel.textContent = person.title || '';
 
   card.appendChild(profileBtn);
+  card.appendChild(flagBtn);
   card.appendChild(removeBtn);
   card.appendChild(avatar);
   card.appendChild(nameInput);
@@ -2095,6 +2209,38 @@ function buildTeamRow(team, col, person, idx, managerIndex, accentColor) {
   profileBtn.textContent = 'i';
   profileBtn.onclick = (event) => { event.stopPropagation(); openProfile(person); };
   rowDiv.appendChild(profileBtn);
+
+  const flagBtn = document.createElement('button');
+  flagBtn.type = 'button';
+  flagBtn.setAttribute('aria-label', 'Trạng thái thông tin hồ sơ');
+  function refreshFlagStateSm() {
+    const incomplete = isPersonInfoIncomplete(person);
+    if (!incomplete && person.confirmedComplete) person.confirmedComplete = false;
+    const needsReview = incomplete && !person.confirmedComplete;
+    const confirmedIncomplete = incomplete && person.confirmedComplete;
+    rowDiv.classList.toggle('is-flagged', needsReview);
+    if (needsReview) {
+      flagBtn.className = 'flag-btn-sm is-warning';
+      flagBtn.innerHTML = warnIcon();
+      flagBtn.title = 'Thiếu Tên/SĐT/CCCD/Lương/Ngân hàng. Bấm để xác nhận đã hoàn thành (bỏ qua cảnh báo).';
+    } else if (confirmedIncomplete) {
+      flagBtn.className = 'flag-btn-sm is-confirmed';
+      flagBtn.innerHTML = checkIcon();
+      flagBtn.title = 'Vẫn còn thiếu thông tin nhưng đã được xác nhận hoàn thành. Bấm để hiện lại cảnh báo.';
+    } else {
+      flagBtn.className = 'flag-btn-sm is-hidden';
+      flagBtn.innerHTML = '';
+      flagBtn.title = '';
+    }
+  }
+  refreshFlagStateSm();
+  flagBtn.onclick = (event) => {
+    event.stopPropagation();
+    person.confirmedComplete = !person.confirmedComplete;
+    refreshFlagStateSm();
+    saveState({ action: (person.confirmedComplete ? 'Xác nhận hoàn thành hồ sơ: ' : 'Bỏ xác nhận, cần dò lại: ') + (person.name || '(trống)') });
+  };
+  rowDiv.appendChild(flagBtn);
   rowDiv.appendChild(removeBtn);
   makeTeamRowDraggable(rowDiv, managerIndex, col.key, idx);
   rowDiv.addEventListener('dragover', (event) => {
