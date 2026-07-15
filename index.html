@@ -409,13 +409,14 @@
   .settings-range-row .range-value { font-size: 12px; color: var(--text-secondary); width: 34px; text-align: right; }
   .settings-select { height: 34px; border-radius: 8px; border: 1px solid var(--border); padding: 0 8px; font: inherit; font-size: 13px; background: #fff; width: 100%; }
   /* Ẩn các ô chọn tệp (input file) khỏi giao diện nhưng KHÔNG dùng display:none —
-     Safari trên Mac/iPhone từ chối mở hộp thoại chọn tệp (Finder) khi input đang display:none,
-     dù Chrome/Firefox vẫn mở bình thường. Kỹ thuật "ẩn trực quan" bên dưới giữ input ở trạng
-     thái vẫn được trình duyệt coi là hiển thị (nên .click() bằng JS vẫn mở được Finder),
-     nhưng người dùng không nhìn thấy và không ảnh hưởng bố cục trang. */
+     Safari trên Mac/iPhone từ chối mở hộp thoại chọn tệp (Finder) khi input đang display:none
+     HOẶC khi vùng hiển thị bị thu về 0px (ví dụ dùng clip:rect), coi như "không hiển thị" tương tự
+     display:none. Vì vậy chỉ ẩn bằng opacity + kích thước rất nhỏ (không dùng clip), và tắt
+     pointer-events để phần tử không vô tình chặn thao tác chuột ở phía dưới nó. .click() gọi
+     bằng JS vẫn hoạt động bình thường trên mọi trình duyệt. */
   input[type="file"] {
-    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; white-space: nowrap; border: 0; opacity: 0.01; clip: rect(0, 0, 0, 0);
+    position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden;
+    border: 0; padding: 0; pointer-events: none;
   }
 
   /* Màu theo phòng ban: ô chọn màu nhỏ cạnh tên bộ phận */
@@ -2675,12 +2676,20 @@ document.getElementById('btn-download-image').onclick = guardEdit(async () => {
       useCORS: true,
       logging: false
     });
-    const dataUrl = canvas.toDataURL('image/png');
+    // Dùng Blob + Object URL thay vì gán thẳng chuỗi data: vào link tải — Safari trên Mac/iPhone
+    // xử lý rất kém với link tải kiểu data: (thường mở ảnh ra tab mới thay vì hiện hộp thoại lưu),
+    // trong khi Blob URL thì tải được bình thường trên mọi trình duyệt.
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('Không tạo được dữ liệu ảnh.');
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = dataUrl;
+    a.href = url;
     // Ảnh luôn dùng đúng chiều đang chọn; tên file cũng cho biết chiều đã chụp.
     a.download = 'so-do-phan-cap-' + (layoutOrientation === 'vertical' ? 'doc' : 'ngang') + '.png';
+    document.body.appendChild(a);
     a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
     progress.textContent = 'Đã tải ảnh về máy.';
   } catch (err) {
     progress.textContent = 'Không tải được ảnh: ' + err.message;
