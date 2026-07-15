@@ -27,6 +27,11 @@
     --shadow-md: 0 10px 24px rgba(20, 27, 51, 0.10), 0 2px 6px rgba(20, 27, 51, 0.05);
     --shadow-lg: 0 22px 48px rgba(20, 27, 51, 0.16);
     --ease-out: cubic-bezier(.22, 1, .36, 1);
+  /* Giá trị mặc định cho các biến màu "trộn" dùng thay color-mix() (xem hàm mixWithWhite trong JS) —
+     áp dụng khi thẻ chưa có màu phòng ban riêng (--card-accent chưa được đặt). */
+  --card-accent-mix60: rgb(225, 229, 236);
+  --card-accent-mix55: rgb(228, 231, 238);
+  --card-accent-a22: rgba(205, 211, 224, 0.22);
   }
   * { box-sizing: border-box; }
   body {
@@ -109,7 +114,7 @@
   }
   .card::before {
     content: ''; position: absolute; top: 0; left: 16px; right: 16px; height: 4px; border-radius: 0 0 4px 4px;
-    background: linear-gradient(90deg, var(--card-accent, var(--border-strong)), color-mix(in srgb, var(--card-accent, var(--border-strong)) 60%, white));
+    background: linear-gradient(90deg, var(--card-accent, var(--border-strong)), var(--card-accent-mix60, var(--border-strong)));
   }
   .card:hover:not(.is-dragging) { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--card-accent, #d7dbe3); }
   /* Các vị trí điều hành cần nhiều chỗ hơn để tên dài không bị khuất. */
@@ -135,7 +140,7 @@
   .avatar {
     width: 56px; height: 56px; border-radius: 50%;
     background: var(--card-accent-soft, #f2f3f5);
-    border: 2.5px solid color-mix(in srgb, var(--card-accent, var(--border-strong)) 55%, white);
+    border: 2.5px solid var(--card-accent-mix55, var(--border-strong));
     display: flex; align-items: center; justify-content: center;
     color: var(--card-accent, var(--text-muted)); overflow: hidden; cursor: pointer; flex-shrink: 0;
     box-shadow: var(--shadow-xs);
@@ -154,7 +159,7 @@
   .role-label {
     font-size: 10.5px; font-weight: 700; color: var(--card-accent, var(--text-secondary)); text-align: center;
     text-transform: uppercase; letter-spacing: 0.035em; background: var(--card-accent-soft, #f2f3f5);
-    padding: 3px 10px; border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--card-accent, var(--border-strong)) 22%, transparent);
+    padding: 3px 10px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--card-accent-a22, transparent);
   }
   .person-title { font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.3; min-height: 14px; }
 
@@ -1552,6 +1557,20 @@ function hexToRgba(hex, alpha) {
   const b = bigint & 255;
   return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
 }
+// Trộn một màu hex với trắng theo tỉ lệ phần trăm (percent% màu gốc + phần còn lại là trắng).
+// Dùng để thay cho CSS color-mix(), vì html2canvas (thư viện xuất ảnh PNG/PDF) không hiểu color-mix()
+// và sẽ báo lỗi "Attempting to parse an unsupported color function" khi xuất ảnh/PDF.
+function mixWithWhite(hex, percent) {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const bigint = parseInt(full, 16);
+  const r = (bigint >> 16) & 255, g = (bigint >> 8) & 255, b = bigint & 255;
+  const p = percent / 100;
+  const mr = Math.round(r * p + 255 * (1 - p));
+  const mg = Math.round(g * p + 255 * (1 - p));
+  const mb = Math.round(b * p + 255 * (1 - p));
+  return 'rgb(' + mr + ',' + mg + ',' + mb + ')';
+}
 function emptyTeam() {
   return { t6: [emptyPerson()], t7: [emptyPerson()] };
 }
@@ -1737,6 +1756,9 @@ function createCard(person, tierTitle, onRemove, onPhoto, accentColor) {
     avatar.style.background = hexToRgba(accentColor, 0.12);
     card.style.setProperty('--card-accent', accentColor);
     card.style.setProperty('--card-accent-soft', hexToRgba(accentColor, 0.12));
+    card.style.setProperty('--card-accent-mix60', mixWithWhite(accentColor, 60));
+    card.style.setProperty('--card-accent-mix55', mixWithWhite(accentColor, 55));
+    card.style.setProperty('--card-accent-a22', hexToRgba(accentColor, 0.22));
   }
 
   const nameInput = document.createElement('input');
@@ -1966,6 +1988,9 @@ function buildTrungCapGroup(manager, i) {
   block.style.borderLeftColor = deptAccent;
   block.style.setProperty('--card-accent', deptAccent);
   block.style.setProperty('--card-accent-soft', hexToRgba(deptAccent, 0.12));
+  block.style.setProperty('--card-accent-mix60', mixWithWhite(deptAccent, 60));
+  block.style.setProperty('--card-accent-mix55', mixWithWhite(deptAccent, 55));
+  block.style.setProperty('--card-accent-a22', hexToRgba(deptAccent, 0.22));
 
   const headerRow = document.createElement('div');
   headerRow.className = 'group-header-row';
