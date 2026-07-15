@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sơ đồ phân cấp nhân sự</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,7 @@
       var(--bg-page);
     background-attachment: fixed;
     color: var(--text-primary);
-    padding: 24px max(16px, env(safe-area-inset-right)) 60px max(16px, env(safe-area-inset-left));
+    padding: 24px 16px 60px;
     -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 1300px; margin: 0 auto; }
@@ -49,12 +49,9 @@
   .sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 20px; line-height: 1.5; }
   .toolbar {
     display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: center;
-    background: rgba(255,255,255,0.75); border: 1px solid var(--border); border-radius: var(--radius-md);
-    padding: 8px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    position: sticky; top: 10px; z-index: 40;
-    transition: box-shadow .18s var(--ease-out), background .18s var(--ease-out), border-color .18s var(--ease-out);
+    background: rgba(255,255,255,0.6); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 8px; backdrop-filter: blur(6px);
   }
-  .toolbar.is-scrolled { background: rgba(255,255,255,0.92); box-shadow: var(--shadow-md); border-color: var(--border-strong); }
   .toolbar button {
     height: 34px; padding: 0 14px; font-size: 13px; font-weight: 500; border-radius: var(--radius-sm);
     border: 1px solid var(--border-strong); background: var(--surface);
@@ -65,7 +62,6 @@
   .toolbar button:active { transform: translateY(0); box-shadow: none; }
   .toolbar button.danger { color: #a32d2d; border-color: #e0b9b9; }
   .toolbar button.danger:hover { background: #fbeeee; border-color: #e0b9b9; color: #a32d2d; }
-  .toolbar-divider { width: 1px; align-self: stretch; min-height: 22px; background: var(--border-strong); margin: 0 2px; flex-shrink: 0; }
   .zoom-group {
     display: flex; align-items: center; gap: 2px; border: 1px solid var(--border-strong);
     border-radius: var(--radius-sm); padding: 3px; background: var(--surface); margin-left: auto; box-shadow: var(--shadow-xs);
@@ -168,28 +164,22 @@
   #org-root { display: flex; flex-direction: row; align-items: stretch; }
 
   /* Bố cục dọc: mỗi cấp nằm trên/dưới cấp kế tiếp, vẫn giữ nguyên dữ liệu sơ đồ. */
-  #org-root.layout-vertical { flex-direction: column; align-items: stretch; min-width: 0; width: 100%; }
+  #org-root.layout-vertical { flex-direction: column; align-items: stretch; min-width: max-content; }
   #org-root.layout-vertical .tier-col { flex-direction: column; align-items: stretch; min-height: 0; }
   #org-root.layout-vertical .tier-header {
-    width: auto; min-width: 0; padding: 10px 4px 2px; justify-content: flex-start;
+    width: auto; min-width: 0; padding: 10px 4px 2px; justify-content: center;
   }
   #org-root.layout-vertical .row {
     flex-direction: row; align-items: center; justify-content: center;
     gap: 12px; padding: 8px 4px 14px; min-height: 0;
   }
-  #org-root.layout-vertical .connector { width: auto; height: 44px; min-height: 44px; align-self: stretch; z-index: 3; }
+  #org-root.layout-vertical .connector { width: auto; height: 44px; min-height: 44px; align-self: stretch; }
   #org-root.layout-vertical .groups-container {
-    flex-direction: column; align-items: flex-start; gap: 18px; padding: 8px 4px 16px;
+    flex-direction: row; justify-content: center; align-items: flex-start; gap: 18px; padding: 8px 4px 16px;
   }
-  #org-root.layout-vertical .t4-row { justify-content: center; }
-  #org-root.layout-vertical .group-block { min-width: 0; width: 100%; max-width: 640px; }
-  #org-root.layout-vertical .group-body { flex-wrap: wrap; justify-content: center; gap: 10px; }
-  #org-root.layout-vertical .team-table { flex-wrap: wrap; }
-  #org-root.layout-vertical .team-col { min-width: 0; }
-  #org-root.layout-vertical .static-line { display: none; }
+  #org-root.layout-vertical .group-block { min-width: max-content; }
 
   .groups-container { display: flex; flex-direction: column; gap: 20px; padding: 6px 4px 16px; }
-  .t4-row { display: flex; flex-direction: row; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
   .group-block {
     display: flex; flex-direction: column; gap: 12px;
     border: 1px solid var(--border); border-left: 3px solid var(--border-strong); border-radius: var(--radius-md); padding: 16px;
@@ -290,42 +280,7 @@
     position: fixed; inset: 0; z-index: 20; display: none; align-items: center; justify-content: center;
     padding: 20px; background: rgba(26, 27, 25, 0.38);
   }
-  .profile-modal.is-open { display: flex; animation: modalBackdropIn .18s var(--ease-out) both; }
-  .profile-modal.is-open .profile-dialog { animation: modalDialogIn .24s var(--ease-out) both; }
-  @keyframes modalBackdropIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes modalDialogIn { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-  /* ---- Toast thông báo ---- */
-  .toast-container {
-    position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%);
-    z-index: 300; display: flex; flex-direction: column-reverse; gap: 8px; align-items: center;
-    width: 100%; max-width: 420px; padding: 0 14px; pointer-events: none;
-  }
-  .toast {
-    pointer-events: auto; display: flex; align-items: center; gap: 9px;
-    padding: 11px 12px 11px 14px; border-radius: 12px; background: #262a3d; color: #fff;
-    font-size: 13px; font-weight: 500; line-height: 1.35; box-shadow: var(--shadow-lg);
-    width: 100%; opacity: 0; transform: translateY(14px) scale(.96);
-    animation: toastIn .28s var(--ease-out) forwards;
-  }
-  .toast.is-leaving { animation: toastOut .22s var(--ease-out) forwards; }
-  .toast.toast-error { background: #7a2424; }
-  .toast.toast-success { background: #0f6e46; }
-  .toast-icon { flex-shrink: 0; font-size: 14px; }
-  .toast-msg { flex: 1; min-width: 0; white-space: pre-line; }
-  .toast-close {
-    flex-shrink: 0; background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer;
-    font-size: 13px; padding: 2px 4px; border-radius: 6px; line-height: 1;
-  }
-  .toast-close:hover { color: #fff; background: rgba(255,255,255,0.12); }
-  @keyframes toastIn { to { opacity: 1; transform: translateY(0) scale(1); } }
-  @keyframes toastOut { to { opacity: 0; transform: translateY(8px) scale(.96); } }
-  @media (prefers-reduced-motion: reduce) {
-    .toast, .profile-modal.is-open, .profile-modal.is-open .profile-dialog { animation: none !important; opacity: 1 !important; transform: none !important; }
-  }
-  @media (max-width: 480px) {
-    .toast-container { max-width: 100%; }
-  }
+  .profile-modal.is-open { display: flex; }
   .profile-dialog { width: min(460px, 100%); background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 16px 44px rgba(0,0,0,0.2); }
   .profile-dialog h2 { font-size: 17px; margin: 0 0 16px; }
   .profile-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
@@ -344,13 +299,7 @@
   .settings-preview.is-visible { display: block; }
   .settings-preview.bg-preview { object-fit: cover; border-radius: 6px; }
   .profile-dialog-lg { width: min(640px, 100%); max-height: 86vh; overflow-y: auto; }
-  .profile-section-title { font-size: 12px; font-weight: 700; color: var(--brand); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; border-top: 1px solid var(--border); padding-top: 14px; display: flex; align-items: center; gap: 7px; }
-  .profile-section-title .section-icon { font-size: 15px; text-transform: none; }
-  .profile-field label { display: flex; align-items: center; gap: 5px; }
-  .status-select { font-weight: 700; transition: color .15s var(--ease-out), border-color .15s var(--ease-out), background .15s var(--ease-out); }
-  .status-select[data-status="Đang làm"] { color: #157a4a; border-color: #a9dcc0 !important; background: #eafaf1; }
-  .status-select[data-status="Tạm nghỉ"] { color: #a1660a; border-color: #f0d19b !important; background: #fff8ea; }
-  .status-select[data-status="Đã nghỉ việc"] { color: #a32d2d; border-color: #e6b9b9 !important; background: #fdf0f0; }
+  .profile-section-title { font-size: 12px; font-weight: 700; color: var(--brand); margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; border-top: 1px solid var(--border); padding-top: 14px; }
   .profile-section-title.is-first { border-top: none; padding-top: 0; margin-top: 0; }
   .profile-field select { width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; font-size: 13px; background: #fff; }
   .file-link { font-size: 12px; color: var(--brand); text-decoration: none; }
@@ -479,7 +428,7 @@
 
   @media (max-width: 720px) {
     body { padding: 16px 10px 34px; }
-    .toolbar { gap: 6px; top: 6px; }
+    .toolbar { gap: 6px; }
     .toolbar button, .lock-badge { min-height: 40px; }
     .zoom-group { margin-left: 0; }
     .search-input { width: min(100%, 230px); }
@@ -487,8 +436,6 @@
     .card.executive-card { width: 180px; }
     #org-root.layout-vertical .tier-header { flex-wrap: wrap; }
     #org-root.layout-vertical .groups-container { justify-content: flex-start; }
-    .toolbar-divider { display: none; }
-    .zoom-hint { display: none; }
 
     /* Trên điện thoại: chỉ hiện nút thiết yếu, gộp phần còn lại vào nút "Thêm" */
     .mobile-more-toggle {
@@ -500,21 +447,6 @@
     .toolbar.show-more .toolbar-more { display: contents; }
     .toolbar button, .toolbar .lock-badge, .toolbar .search-input, .toolbar .filter-select { flex: 0 0 auto; }
   }
-
-  @media (max-width: 480px) {
-    .org-heading { gap: 10px; }
-    .company-logo { width: 36px; height: 36px; border-radius: 9px; }
-    h1 { font-size: 18px; }
-    .sub { font-size: 12px; margin-bottom: 14px; }
-    .toolbar { padding: 6px; gap: 5px; border-radius: var(--radius-sm); }
-    .toolbar button { padding: 0 10px; font-size: 12.5px; }
-    .search-input, .filter-select { width: 100%; flex: 1 1 100% !important; }
-    .zoom-group { flex: 1 1 100%; justify-content: center; margin-left: 0; }
-    .viewport { padding: 10px; max-height: 68vh; }
-    .card { width: 128px; padding: 13px 10px 10px; }
-    .card.executive-card { width: 160px; }
-  }
-
 
   /* Ẩn giao diện mặc định của Google Translate, chỉ dùng nút riêng để bật/tắt */
   #google_translate_element { position: absolute; top: -9999px; left: -9999px; height: 0; overflow: hidden; }
@@ -529,7 +461,7 @@
 <div class="wrap">
   <div class="org-heading">
     <img id="company-logo" class="company-logo" alt="Logo công ty">
-    <div><h1 id="org-heading">Sơ đồ phân cấp nhân sự</h1><p class="sub" id="org-subtitle">Sơ đồ có thể chuyển ngang/dọc: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây.</p></div>
+    <div><h1 id="org-heading">Sơ đồ phân cấp nhân sự</h1><p class="sub" id="org-subtitle">Sơ đồ có thể chuyển ngang/dọc: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây — ai có link đều xem được, chỉ người có mật khẩu mới chỉnh sửa được.</p></div>
   </div>
 
 
@@ -538,16 +470,15 @@
     <button id="btn-toggle-edit">🔓 Mở khóa chỉnh sửa</button>
     <button id="btn-rename-editor" style="display:none;" title="Đổi tên hiển thị trong lịch sử chỉnh sửa">✎ Tên của bạn</button>
     <button id="btn-customize">Tùy chỉnh</button>
-    <span class="toolbar-divider" aria-hidden="true"></span>
-    <button id="btn-history" title="Xem chi tiết ai đã sửa gì, lúc nào">🕘 Lịch sử</button>
-    <span class="toolbar-divider" aria-hidden="true"></span>
+    <button id="btn-copy-link" title="Link chỉ xem — ai có link đều xem được, không sửa được">🔗 Link chỉ xem</button>
+    <button id="btn-copy-edit-link" title="Link chỉnh sửa — người nhận vào là sửa được luôn, không cần nhập mật khẩu">🔑 Link chỉnh sửa</button>
+    <button id="btn-history" title="Xem ai đã chỉnh sửa và lúc nào">🕘 Lịch sử</button>
     <button id="btn-toggle-layout" title="Đổi chiều hiển thị sơ đồ">↕ Chuyển sang dọc</button>
     <button id="btn-collapse-all" title="Thu gọn tất cả bộ phận — dễ xem trên điện thoại">▾ Thu gọn tất cả</button>
     <button id="btn-expand-all" title="Mở rộng tất cả bộ phận">▸ Mở tất cả</button>
     <button id="btn-translate-en" title="Dịch toàn bộ sơ đồ sang tiếng Anh (dùng Google Dịch)">🌐 English</button>
     <button id="btn-toggle-more" class="mobile-more-toggle" type="button">⋯ Thêm</button>
     <span class="toolbar-more" id="toolbar-more">
-      <span class="toolbar-divider" aria-hidden="true"></span>
       <button id="btn-download-image" title="Cần mở khóa chỉnh sửa mới tải được ảnh">Tải ảnh về máy (.png)</button>
       <button id="btn-download-pdf" title="Cần mở khóa chỉnh sửa mới xuất được">Xuất PDF</button>
       <button id="btn-export" title="Cần mở khóa chỉnh sửa mới xuất được">Xuất file (.json)</button>
@@ -560,7 +491,6 @@
       <span id="img-progress" style="font-size:12px;color:var(--text-muted);"></span>
       <span class="drag-hint">↕ Mở khóa để kéo-thả thẻ</span>
     </span>
-    <span class="toolbar-divider" aria-hidden="true"></span>
     <input id="search-input" class="search-input" type="search" placeholder="Tìm tên, email, phòng ban...">
     <select id="filter-select" class="filter-select" aria-label="Lọc theo nhóm">
       <option value="all">Tất cả vị trí</option>
@@ -614,39 +544,6 @@ const FIREBASE_CONFIG = {
 };
 // Tên document lưu sơ đồ trên Firestore (có thể đổi nếu muốn tách nhiều sơ đồ khác nhau)
 const DOC_PATH = { collection: 'orgcharts', doc: 'main' };
-
-/* ---- Toast thông báo (thay cho alert() chặn màn hình) ---- */
-const toastContainer = document.createElement('div');
-toastContainer.className = 'toast-container';
-toastContainer.setAttribute('aria-live', 'polite');
-document.body.appendChild(toastContainer);
-
-function showToast(message, type) {
-  const el = document.createElement('div');
-  el.className = 'toast' + (type ? ' toast-' + type : '');
-  el.innerHTML =
-    '<span class="toast-icon">' + (type === 'error' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️') + '</span>' +
-    '<span class="toast-msg"></span>' +
-    '<button type="button" class="toast-close" aria-label="Đóng thông báo">✕</button>';
-  el.querySelector('.toast-msg').textContent = message;
-  toastContainer.appendChild(el);
-
-  let dismissed = false;
-  const dismiss = () => {
-    if (dismissed) return;
-    dismissed = true;
-    clearTimeout(timer);
-    el.classList.add('is-leaving');
-    el.addEventListener('animationend', () => el.remove(), { once: true });
-    setTimeout(() => el.remove(), 400); // phòng khi trình duyệt không bắn animationend
-  };
-  const timer = setTimeout(dismiss, type === 'error' ? 5000 : 3800);
-  el.querySelector('.toast-close').onclick = dismiss;
-  return dismiss;
-}
-function toastError(message) { return showToast(message, 'error'); }
-function toastSuccess(message) { return showToast(message, 'success'); }
-
 
 let firebaseReady = false;
 let db = null;
@@ -745,7 +642,7 @@ const T1 = { id: 't1', title: 'Chủ tịch', accent: '#534AB7' };
 const T2 = { id: 't2', title: 'Giám đốc', accent: '#185FA5' };
 const T2B = { id: 't2b', title: 'Phó Giám đốc', accent: '#2E8B8B' };
 const T3 = { id: 't3', title: 'Tổng quản lý', accent: '#0F6E56' };
-const T4 = { id: 't4', title: 'Quản lý trung cấp', accent: '#B4652D' };
+const T4 = { id: 't4', title: 'Quản lý trung cấp', accent: '#0F6E56' };
 const TEAM_COLS = [
   { key: 't6', title: 'Phó quản lý' },
   { key: 't7', title: 'Nhân viên' }
@@ -866,46 +763,46 @@ const profileModal = document.createElement('div');
 profileModal.className = 'profile-modal';
 profileModal.innerHTML =
   '<div class="profile-dialog profile-dialog-lg" role="dialog" aria-modal="true" aria-labelledby="profile-heading">' +
-    '<h2 id="profile-heading">🗂️ Hồ sơ nhân sự</h2>' +
+    '<h2 id="profile-heading">Hồ sơ nhân sự</h2>' +
 
-    '<div class="profile-section-title is-first"><span class="section-icon">👤</span>Thông tin cơ bản</div>' +
+    '<div class="profile-section-title is-first">Thông tin cơ bản</div>' +
     '<div class="settings-grid">' +
-      '<div class="profile-field"><label for="profile-title">🏷️ Chức danh chi tiết</label><input id="profile-title" type="text" placeholder="VD: Trưởng phòng Kinh doanh"></div>' +
-      '<div class="profile-field"><label for="profile-gender">⚧ Giới tính</label><select id="profile-gender"><option value="">-- Chọn --</option><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select></div>' +
-      '<div class="profile-field"><label for="profile-dob">🎂 Ngày sinh</label><input id="profile-dob" type="date"></div>' +
-      '<div class="profile-field"><label for="profile-phone">📞 Số điện thoại</label><input id="profile-phone" type="tel" placeholder="VD: 0901 234 567"></div>' +
-      '<div class="profile-field"><label for="profile-email">✉️ Email</label><input id="profile-email" type="email" placeholder="VD: ten@congty.com"></div>' +
-      '<div class="profile-field full-width"><label for="profile-address">🏠 Địa chỉ</label><input id="profile-address" type="text" placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></div>' +
+      '<div class="profile-field"><label for="profile-title">Chức danh chi tiết</label><input id="profile-title" type="text" placeholder="VD: Trưởng phòng Kinh doanh"></div>' +
+      '<div class="profile-field"><label for="profile-gender">Giới tính</label><select id="profile-gender"><option value="">-- Chọn --</option><option value="Nam">Nam</option><option value="Nữ">Nữ</option><option value="Khác">Khác</option></select></div>' +
+      '<div class="profile-field"><label for="profile-dob">Ngày sinh</label><input id="profile-dob" type="date"></div>' +
+      '<div class="profile-field"><label for="profile-phone">Số điện thoại</label><input id="profile-phone" type="tel" placeholder="VD: 0901 234 567"></div>' +
+      '<div class="profile-field"><label for="profile-email">Email</label><input id="profile-email" type="email" placeholder="VD: ten@congty.com"></div>' +
+      '<div class="profile-field full-width"><label for="profile-address">Địa chỉ</label><input id="profile-address" type="text" placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></div>' +
     '</div>' +
 
-    '<div class="profile-section-title"><span class="section-icon">💼</span>Thông tin công việc</div>' +
+    '<div class="profile-section-title">Thông tin công việc</div>' +
     '<div class="settings-grid">' +
-      '<div class="profile-field"><label for="profile-join-date">📅 Ngày vào làm</label><input id="profile-join-date" type="date"></div>' +
-      '<div class="profile-field"><label for="profile-status">🚦 Trạng thái</label><select id="profile-status" class="status-select"><option value="Đang làm">🟢 Đang làm</option><option value="Tạm nghỉ">🟡 Tạm nghỉ</option><option value="Đã nghỉ việc">🔴 Đã nghỉ việc</option></select></div>' +
+      '<div class="profile-field"><label for="profile-join-date">Ngày vào làm</label><input id="profile-join-date" type="date"></div>' +
+      '<div class="profile-field"><label for="profile-status">Trạng thái</label><select id="profile-status"><option value="Đang làm">Đang làm</option><option value="Tạm nghỉ">Tạm nghỉ</option><option value="Đã nghỉ việc">Đã nghỉ việc</option></select></div>' +
     '</div>' +
 
-    '<div class="profile-section-title"><span class="section-icon">🪪</span>Lương &amp; bảo hiểm &amp; giấy tờ tùy thân</div>' +
+    '<div class="profile-section-title">Lương &amp; bảo hiểm &amp; giấy tờ tùy thân</div>' +
     '<div class="settings-grid">' +
-      '<div class="profile-field"><label for="profile-cccd">🆔 Số CCCD</label><input id="profile-cccd" type="text"></div>' +
-      '<div class="profile-field"><label for="profile-bhxh">🛡️ Số sổ BHXH</label><input id="profile-bhxh" type="text"></div>' +
-      '<div class="profile-field"><label for="profile-salary">💰 Lương (VNĐ)</label><input id="profile-salary" type="text" placeholder="VD: 12.000.000"></div>' +
-      '<div class="profile-field"><label for="profile-bank">🏦 Ngân hàng - Số tài khoản</label><input id="profile-bank" type="text" placeholder="VD: Vietcombank - 0123456789"></div>' +
+      '<div class="profile-field"><label for="profile-cccd">Số CCCD</label><input id="profile-cccd" type="text"></div>' +
+      '<div class="profile-field"><label for="profile-bhxh">Số sổ BHXH</label><input id="profile-bhxh" type="text"></div>' +
+      '<div class="profile-field"><label for="profile-salary">Lương (VNĐ)</label><input id="profile-salary" type="text" placeholder="VD: 12.000.000"></div>' +
+      '<div class="profile-field"><label for="profile-bank">Ngân hàng - Số tài khoản</label><input id="profile-bank" type="text" placeholder="VD: Vietcombank - 0123456789"></div>' +
     '</div>' +
 
-    '<div class="profile-section-title"><span class="section-icon">📎</span>Tệp đính kèm</div>' +
-    '<div class="profile-field full-width"><label>🪪 CCCD (scan mặt trước/sau)</label>' +
+    '<div class="profile-section-title">Tệp đính kèm</div>' +
+    '<div class="profile-field full-width"><label>CCCD (scan mặt trước/sau)</label>' +
       '<div class="settings-upload-row"><button type="button" id="btn-upload-cccd">Tải tệp lên</button><a id="link-cccd" class="file-link" href="#">Chưa có tệp</a><button type="button" id="btn-remove-cccd" class="file-remove-btn" style="display:none;">✕ Xóa</button></div>' +
     '</div>' +
-    '<div class="profile-field full-width"><label>📄 Hợp đồng lao động (scan)</label>' +
+    '<div class="profile-field full-width"><label>Hợp đồng lao động (scan)</label>' +
       '<div class="settings-upload-row"><button type="button" id="btn-upload-contract">Tải tệp lên</button><a id="link-contract" class="file-link" href="#">Chưa có tệp</a><button type="button" id="btn-remove-contract" class="file-remove-btn" style="display:none;">✕ Xóa</button></div>' +
     '</div>' +
-    '<div class="profile-field full-width"><label>🎓 Bằng cấp / chứng chỉ (có thể thêm nhiều tệp)</label>' +
+    '<div class="profile-field full-width"><label>Bằng cấp / chứng chỉ (có thể thêm nhiều tệp)</label>' +
       '<div class="settings-upload-row"><button type="button" id="btn-upload-degree">+ Thêm tệp</button></div>' +
       '<ul id="degree-file-list" class="file-list"></ul>' +
     '</div>' +
     '<div id="attachment-preview" class="attachment-preview"></div>' +
 
-    '<div class="profile-field full-width"><label for="profile-note">📝 Ghi chú</label><textarea id="profile-note" placeholder="Thông tin thêm..."></textarea></div>' +
+    '<div class="profile-field full-width"><label for="profile-note">Ghi chú</label><textarea id="profile-note" placeholder="Thông tin thêm..."></textarea></div>' +
     '<div id="profile-upload-status" class="upload-status"></div>' +
     '<div class="profile-actions"><button type="button" class="close-profile">Đóng</button><button type="button" class="save-profile">Lưu hồ sơ</button></div>' +
   '</div>';
@@ -1048,7 +945,7 @@ async function openProfile(person) {
     const pass = prompt('Sơ đồ này giới hạn xem chi tiết hồ sơ. Nhập mật khẩu để xem và chỉnh sửa:');
     if (pass === null || pass === '') return;
     const ok = await checkEditPassword(pass);
-    if (!ok) { toastError('Sai mật khẩu.'); return; }
+    if (!ok) { alert('Sai mật khẩu.'); return; }
     activateEditMode('profile');
   }
   profileTarget = ensurePersonProfile(person);
@@ -1059,9 +956,7 @@ async function openProfile(person) {
   profileModal.querySelector('#profile-email').value = profileTarget.email;
   profileModal.querySelector('#profile-address').value = profileTarget.address || '';
   profileModal.querySelector('#profile-join-date').value = profileTarget.joinDate || '';
-  const statusSelectEl = profileModal.querySelector('#profile-status');
-  statusSelectEl.value = profileTarget.status || 'Đang làm';
-  statusSelectEl.dataset.status = statusSelectEl.value;
+  profileModal.querySelector('#profile-status').value = profileTarget.status || 'Đang làm';
   profileModal.querySelector('#profile-cccd').value = profileTarget.cccd || '';
   profileModal.querySelector('#profile-bhxh').value = profileTarget.bhxh || '';
   profileModal.querySelector('#profile-salary').value = profileTarget.salary || '';
@@ -1085,9 +980,6 @@ function closeProfile() {
   profileTarget = null;
 }
 
-profileModal.querySelector('#profile-status').addEventListener('change', (e) => {
-  e.target.dataset.status = e.target.value;
-});
 profileModal.querySelector('.close-profile').onclick = closeProfile;
 profileModal.querySelector('.save-profile').onclick = () => {
   if (!editMode || !profileTarget) return;
@@ -1209,7 +1101,7 @@ settingsLogoFileInput.onchange = async (e) => {
   try {
     pendingLogoDataUrl = await compressImageFile(file, 400, 'image/png', 0.9);
   } catch (err) {
-    toastError('Không xử lý được ảnh logo: ' + err.message);
+    alert('Không xử lý được ảnh logo: ' + err.message);
     return;
   }
   settingsModal.querySelector('#setting-logo-url').value = '';
@@ -1227,7 +1119,7 @@ settingsBgFileInput.onchange = async (e) => {
   try {
     pendingBgDataUrl = await compressImageFile(file, 1600, 'image/jpeg', 0.7);
   } catch (err) {
-    toastError('Không xử lý được ảnh nền: ' + err.message);
+    alert('Không xử lý được ảnh nền: ' + err.message);
     return;
   }
   settingsModal.querySelector('#setting-bg-url').value = '';
@@ -1293,7 +1185,7 @@ settingsModal.addEventListener('click', (event) => { if (event.target === settin
 function guardEdit(fn) {
   return function (...args) {
     if (!editMode) {
-      toastError('Sơ đồ đang ở chế độ chỉ xem. Bấm "Mở khóa chỉnh sửa" và nhập mật khẩu để sửa.');
+      alert('Sơ đồ đang ở chế độ chỉ xem. Bấm "Mở khóa chỉnh sửa" và nhập mật khẩu để sửa.');
       return;
     }
     return fn.apply(this, args);
@@ -1305,7 +1197,7 @@ async function checkEditPassword(pass) {
   if (!firebaseReady || !auth) {
     // Không có kết nối Internet/Firebase: không thể xác thực thật, nên KHÔNG cho sửa
     // (tránh trường hợp "sửa tạm" rồi tưởng đã lưu, trong khi thực ra dữ liệu không đồng bộ được).
-    toastError('Không kết nối được với máy chủ để xác thực. Hãy kiểm tra lại mạng và thử lại.');
+    alert('Không kết nối được với máy chủ để xác thực. Hãy kiểm tra lại mạng và thử lại.');
     return false;
   }
   try {
@@ -1342,7 +1234,7 @@ document.getElementById('btn-toggle-edit').onclick = async () => {
 
   const ok = await checkEditPassword(pass);
   if (!ok) {
-    toastError('Sai mật khẩu.');
+    alert('Sai mật khẩu.');
     return;
   }
   activateEditMode('password');
@@ -1360,7 +1252,7 @@ function emptyPerson() { return { name: '', photo: null, title: '', phone: '', e
 function defaultSettings() {
   return {
     orgName: 'Sơ đồ phân cấp nhân sự',
-    subtitle: 'Sơ đồ có thể chuyển ngang/dọc: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây.',
+    subtitle: 'Sơ đồ có thể chuyển ngang/dọc: kéo thanh cuộn để xem, dùng nút phóng to/thu nhỏ để chỉnh vừa mắt. Dữ liệu lưu trên đám mây — ai có link đều xem được, chỉ người có mật khẩu mới chỉnh sửa được.',
     logoUrl: '', brandColor: '#2E5FE8',
     bgImage: '', bgOpacity: '15', cardStyle: 'rounded'
   };
@@ -1481,12 +1373,12 @@ function saveState(options = {}) {
     // Chế độ dự phòng: chỉ lưu trên máy này, giống bản gốc chưa nối đám mây
     try {
       const entry = { name: currentEditorName || 'Ẩn danh', at: new Date().toISOString(), state: state, action: actionLabel };
-      editHistory = [entry, ...(Array.isArray(editHistory) ? editHistory : [])].slice(0, 50);
+      editHistory = [entry, ...(Array.isArray(editHistory) ? editHistory : [])].slice(0, 20);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       setStatus('⚠️ Đã lưu tạm trên máy này (chưa có đám mây để đồng bộ cho người khác).');
     } catch (err) {
       setStatus('Không lưu được: ' + err.message);
-      toastError('Không lưu được trên máy này (có thể do ảnh vừa chọn quá lớn). Hãy thử chọn ảnh khác hoặc dung lượng nhỏ hơn.');
+      alert('Không lưu được trên máy này (có thể do ảnh vừa chọn quá lớn). Hãy thử chọn ảnh khác hoặc dung lượng nhỏ hơn.');
     }
     return;
   }
@@ -1515,7 +1407,7 @@ function saveState(options = {}) {
     } catch (err) {
       setStatus('Không lưu được lên đám mây: ' + err.message);
       const sizeIssue = /longer than|exceeds|too large|invalid-argument|resource-exhausted/i.test(err.message || '');
-      toastError(
+      alert(
         'Không lưu được lên đám mây.\n\nLý do: ' + err.message +
         (sizeIssue ? '\n\nCó thể ảnh bạn vừa tải lên quá lớn. Hãy thử chọn ảnh khác hoặc ảnh có dung lượng nhỏ hơn.' : '')
       );
@@ -1523,13 +1415,13 @@ function saveState(options = {}) {
   }, 300);
 }
 
-// Xóa bớt các dòng lịch sử cũ, chỉ giữ lại 50 dòng gần nhất để collection không phình to mãi
+// Xóa bớt các dòng lịch sử cũ, chỉ giữ lại 20 dòng gần nhất để collection không phình to mãi
 async function pruneOldHistory() {
   try {
     const snap = await historyColRef.orderBy('at', 'desc').get();
     const docs = snap.docs;
-    if (docs.length <= 50) return;
-    const toDelete = docs.slice(50);
+    if (docs.length <= 20) return;
+    const toDelete = docs.slice(20);
     await Promise.all(toDelete.map((d) => d.ref.delete()));
   } catch (err) {
     console.error('Không dọn được lịch sử cũ:', err);
@@ -1702,15 +1594,8 @@ function render() {
   groupsContainer.className = 'groups-container';
   groupsContainer.id = 'row-t4';
 
-  const T4_MAX_PER_ROW = 5;
-  let t4RowWrap = null;
   state.t4.forEach((manager, i) => {
-    if (i % T4_MAX_PER_ROW === 0) {
-      t4RowWrap = document.createElement('div');
-      t4RowWrap.className = 't4-row';
-      groupsContainer.appendChild(t4RowWrap);
-    }
-    t4RowWrap.appendChild(buildTrungCapGroup(manager, i));
+    groupsContainer.appendChild(buildTrungCapGroup(manager, i));
   });
 
   t4Col.appendChild(groupsContainer);
@@ -2028,16 +1913,17 @@ function buildTeamTable(team, managerIndex, accentColor) {
   return table;
 }
 
-function drawBranchFromEl(connectorEl, parentEl, childEls, strokeColor, parentColor) {
+function drawBranchFromEl(connectorEl, parentEl, childEls) {
   if (!connectorEl || !parentEl || childEls.length === 0) return;
   if (!parentEl.querySelector('.card:not(.is-filtered-out)')) return;
   if (layoutOrientation === 'vertical') {
-    drawVerticalBranchFromEl(connectorEl, parentEl, childEls, strokeColor, parentColor);
+    drawVerticalBranchFromEl(connectorEl, parentEl, childEls);
     return;
   }
   const connectorRect = connectorEl.getBoundingClientRect();
   const width = Math.max(connectorRect.width, 1) / zoomLevel;
   const height = Math.max(connectorRect.height, 1) / zoomLevel;
+  const midX = width / 2;
 
   const parentRect = parentEl.getBoundingClientRect();
   const parentCenterY = (parentRect.top + parentRect.height / 2 - connectorRect.top) / zoomLevel;
@@ -2047,66 +1933,49 @@ function drawBranchFromEl(connectorEl, parentEl, childEls, strokeColor, parentCo
     return (r.top + r.height / 2 - connectorRect.top) / zoomLevel;
   });
 
-  const stroke = strokeColor || '#c9c6ba';
-  const fromColor = parentColor || stroke;
-  const gid = 'grad-' + connectorEl.id;
-  const fid = 'shadow-' + connectorEl.id;
-  const curveX = width * 0.55;
+  const stroke = '#c9c6ba';
   let svg = '<svg width="' + width + '" height="' + height + '" style="position:absolute;top:0;left:0;overflow:visible;">';
-  svg += '<defs>' +
-    '<linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="' + width + '" y2="0">' +
-      '<stop offset="0%" stop-color="' + fromColor + '"/>' +
-      '<stop offset="100%" stop-color="' + stroke + '"/>' +
-    '</linearGradient>' +
-    '<filter id="' + fid + '" filterUnits="userSpaceOnUse" x="-15" y="' + (parentCenterY - 20) + '" width="' + (width + 30) + '" height="' + (height + 40) + '">' +
-      '<feDropShadow dx="0" dy="1" stdDeviation="1.1" flood-color="' + stroke + '" flood-opacity="0.28"/>' +
-    '</filter>' +
-  '</defs>';
+  svg += '<line x1="0" y1="' + parentCenterY + '" x2="' + midX + '" y2="' + parentCenterY + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+
+  const allY = childPoints.concat([parentCenterY]);
+  const minY = Math.min(...allY);
+  const maxY = Math.max(...allY);
+  if (maxY > minY) {
+    svg += '<line x1="' + midX + '" y1="' + minY + '" x2="' + midX + '" y2="' + maxY + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+  }
   childPoints.forEach(y => {
-    svg += '<path d="M 0 ' + parentCenterY + ' C ' + curveX + ' ' + parentCenterY + ', ' + curveX + ' ' + y + ', ' + width + ' ' + y + '" stroke="url(#' + gid + ')" stroke-width="2.2" fill="none" stroke-linecap="round" filter="url(#' + fid + ')" opacity="0.92"/>';
-    svg += '<circle cx="' + width + '" cy="' + y + '" r="3" fill="#fff" stroke="' + stroke + '" stroke-width="1.6"/>';
+    svg += '<line x1="' + midX + '" y1="' + y + '" x2="' + width + '" y2="' + y + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+    svg += '<circle cx="' + width + '" cy="' + y + '" r="2.5" fill="' + stroke + '"/>';
   });
-  svg += '<circle cx="0" cy="' + parentCenterY + '" r="3" fill="#fff" stroke="' + fromColor + '" stroke-width="1.6"/>';
   svg += '</svg>';
   connectorEl.innerHTML = svg;
 }
 
-function drawVerticalBranchFromEl(connectorEl, parentEl, childEls, strokeColor, parentColor) {
+function drawVerticalBranchFromEl(connectorEl, parentEl, childEls) {
   const connectorRect = connectorEl.getBoundingClientRect();
   const width = Math.max(connectorRect.width, 1) / zoomLevel;
+  const height = Math.max(connectorRect.height, 1) / zoomLevel;
+  const midY = height / 2;
   const parentRect = parentEl.getBoundingClientRect();
   const parentCenterX = (parentRect.left + parentRect.width / 2 - connectorRect.left) / zoomLevel;
-
-  // Lấy đúng vị trí thực tế (đỉnh) của từng thẻ con — không giả định bằng chiều cao cố định của connector,
-  // vì giữa connector và thẻ con còn có tiêu đề nhóm (tier-header) chiếm thêm khoảng trống theo chiều dọc.
-  // Nếu tính sai, đoạn cuối đường nối sẽ nằm lọt vào trong tiêu đề và bị che khuất, gây cảm giác đường bị đứt.
   const childPoints = childEls.map(el => {
     const r = el.getBoundingClientRect();
-    return {
-      x: (r.left + r.width / 2 - connectorRect.left) / zoomLevel,
-      y: (r.top - connectorRect.top) / zoomLevel
-    };
+    return (r.left + r.width / 2 - connectorRect.left) / zoomLevel;
   });
-  const minHeight = Math.max(connectorRect.height, 1) / zoomLevel;
-  const height = childPoints.reduce((m, p) => Math.max(m, p.y), minHeight);
 
-  const stroke = strokeColor || '#c9c6ba';
-  const fromColor = parentColor || stroke;
-  const gid = 'grad-' + connectorEl.id;
-  const fid = 'shadow-' + connectorEl.id;
-  let svg = '<svg width="' + width + '" height="' + height + '" style="position:absolute;top:0;left:0;overflow:visible;pointer-events:none;">';
-  svg += '<defs>' +
-    '<linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="' + height + '">' +
-      '<stop offset="0%" stop-color="' + fromColor + '"/>' +
-      '<stop offset="100%" stop-color="' + stroke + '"/>' +
-    '</linearGradient>' +
-    '<filter id="' + fid + '" filterUnits="userSpaceOnUse" x="' + (parentCenterX - 20) + '" y="-15" width="' + (width + 40) + '" height="' + (height + 30) + '">' +
-      '<feDropShadow dx="0" dy="1" stdDeviation="1.1" flood-color="' + stroke + '" flood-opacity="0.28"/>' +
-    '</filter>' +
-  '</defs>';
-  childPoints.forEach(p => {
-    const curveY = p.y * 0.55;
-    svg += '<path d="M ' + parentCenterX + ' 0 C ' + parentCenterX + ' ' + curveY + ', ' + p.x + ' ' + curveY + ', ' + p.x + ' ' + p.y + '" stroke="url(#' + gid + ')" stroke-width="2.2" fill="none" stroke-linecap="round" filter="url(#' + fid + ')" opacity="0.92"/>';
+  const stroke = '#c9c6ba';
+  let svg = '<svg width="' + width + '" height="' + height + '" style="position:absolute;top:0;left:0;overflow:visible;">';
+  svg += '<line x1="' + parentCenterX + '" y1="0" x2="' + parentCenterX + '" y2="' + midY + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+
+  const allX = childPoints.concat([parentCenterX]);
+  const minX = Math.min(...allX);
+  const maxX = Math.max(...allX);
+  if (maxX > minX) {
+    svg += '<line x1="' + minX + '" y1="' + midY + '" x2="' + maxX + '" y2="' + midY + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+  }
+  childPoints.forEach(x => {
+    svg += '<line x1="' + x + '" y1="' + midY + '" x2="' + x + '" y2="' + height + '" stroke="' + stroke + '" stroke-width="1.5"/>';
+    svg += '<circle cx="' + x + '" cy="' + height + '" r="2.5" fill="' + stroke + '"/>';
   });
   svg += '</svg>';
   connectorEl.innerHTML = svg;
@@ -2117,26 +1986,22 @@ function drawAllConnectors() {
   drawBranchFromEl(
     document.getElementById('connector-t1'),
     document.getElementById('row-t1'),
-    Array.from(document.getElementById('row-t2').querySelectorAll('.card:not(.is-filtered-out)')),
-    T2.accent, T1.accent
+    Array.from(document.getElementById('row-t2').querySelectorAll('.card:not(.is-filtered-out)'))
   );
   drawBranchFromEl(
     document.getElementById('connector-t2'),
     document.getElementById('row-t2'),
-    Array.from(document.getElementById('row-t2b').querySelectorAll('.card:not(.is-filtered-out)')),
-    T2B.accent, T2.accent
+    Array.from(document.getElementById('row-t2b').querySelectorAll('.card:not(.is-filtered-out)'))
   );
   drawBranchFromEl(
     document.getElementById('connector-t2b'),
     document.getElementById('row-t2b'),
-    Array.from(document.getElementById('row-t3').querySelectorAll('.card:not(.is-filtered-out)')),
-    T3.accent, T2B.accent
+    Array.from(document.getElementById('row-t3').querySelectorAll('.card:not(.is-filtered-out)'))
   );
   drawBranchFromEl(
     document.getElementById('connector-t3'),
     document.getElementById('row-t3'),
-    Array.from(document.getElementById('row-t4').querySelectorAll('.group-block:not(.is-filtered-out)')),
-    T4.accent, T3.accent
+    Array.from(document.getElementById('row-t4').querySelectorAll('.group-block:not(.is-filtered-out)'))
   );
 }
 
@@ -2226,6 +2091,34 @@ document.getElementById('zoom-reset').onclick = () => {
 document.getElementById('btn-toggle-layout').onclick = toggleLayoutOrientation;
 document.getElementById('btn-customize').onclick = guardEdit(openSettings);
 
+function cleanShareUrl() {
+  return window.location.origin + window.location.pathname + window.location.search;
+}
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    prompt('Sao chép link này để chia sẻ:', text);
+    return false;
+  }
+}
+
+document.getElementById('btn-copy-link').onclick = async () => {
+  const ok = await copyTextToClipboard(cleanShareUrl());
+  if (ok) setStatus('Đã sao chép link chỉ xem — người nhận không sửa được.');
+};
+
+document.getElementById('btn-copy-edit-link').onclick = async () => {
+  const pass = prompt('Nhập mật khẩu chỉnh sửa để tạo link mời chỉnh sửa:');
+  if (pass === null || pass === '') return;
+  const ok = await checkEditPassword(pass);
+  if (!ok) { alert('Sai mật khẩu.'); return; }
+  const link = cleanShareUrl() + '#edit=' + encodeURIComponent(pass);
+  const copied = await copyTextToClipboard(link);
+  if (copied) setStatus('Đã sao chép link chỉnh sửa — chỉ gửi cho người bạn tin tưởng.');
+};
+
 // ---- Thu gọn / mở tất cả bộ phận — giúp xem từng nhánh dễ hơn trên điện thoại ----
 function setAllGroupsCollapsed(collapsed) {
   (state.t4 || []).forEach((manager) => { manager.collapsed = collapsed; });
@@ -2263,27 +2156,6 @@ function formatHistoryTime(iso) {
   } catch (err) { return ''; }
 }
 
-// Thời gian tương đối kiểu "5 phút trước" — giúp nhìn lịch sử nhanh hơn mà không cần đọc giờ tuyệt đối
-function formatRelativeTime(iso) {
-  try {
-    const d = new Date(iso);
-    const diffMs = Date.now() - d.getTime();
-    const diffSec = Math.round(diffMs / 1000);
-    if (diffSec < 5) return 'Vừa xong';
-    if (diffSec < 60) return diffSec + ' giây trước';
-    const diffMin = Math.round(diffSec / 60);
-    if (diffMin < 60) return diffMin + ' phút trước';
-    const diffHour = Math.round(diffMin / 60);
-    if (diffHour < 24) return diffHour + ' giờ trước';
-    const diffDay = Math.round(diffHour / 24);
-    if (diffDay < 30) return diffDay + ' ngày trước';
-    const diffMonth = Math.round(diffDay / 30);
-    if (diffMonth < 12) return diffMonth + ' tháng trước';
-    const diffYear = Math.round(diffMonth / 12);
-    return diffYear + ' năm trước';
-  } catch (err) { return ''; }
-}
-
 async function openHistory() {
   const list = historyModal.querySelector('#history-list');
   historyModal.classList.add('is-open');
@@ -2296,7 +2168,7 @@ async function openHistory() {
 
   list.innerHTML = '<li class="history-empty">Đang tải lịch sử...</li>';
   try {
-    const snap = await historyColRef.orderBy('at', 'desc').limit(50).get();
+    const snap = await historyColRef.orderBy('at', 'desc').limit(20).get();
     editHistory = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderHistoryList(editHistory);
   } catch (err) {
@@ -2315,7 +2187,7 @@ function renderHistoryList(entries) {
       '<div class="history-info">' +
         '<span class="history-name">' + (entry.name || 'Ẩn danh') + '</span>' +
         '<span class="history-action">' + (entry.action || 'Cập nhật sơ đồ') + '</span>' +
-        '<span class="history-time" title="' + formatHistoryTime(entry.at) + '">' + formatHistoryTime(entry.at) + ' · ' + formatRelativeTime(entry.at) + '</span>' +
+        '<span class="history-time">' + formatHistoryTime(entry.at) + '</span>' +
       '</div>' +
       (entry.state ?
         '<button type="button" class="history-restore-btn" data-idx="' + idx + '" ' + (editMode ? '' : 'disabled title="Bật chế độ chỉnh sửa để khôi phục"') + '>Khôi phục</button>'
@@ -2366,14 +2238,14 @@ avatarFileInput.onchange = async (e) => {
     // hợp trong lúc người dùng đang chọn file, dữ liệu đã được đồng bộ mới từ đám mây về.
     const target = findPersonById(pendingAvatarTarget);
     if (!target) {
-      toastError('Không tìm thấy người này trong dữ liệu hiện tại (có thể dữ liệu vừa được cập nhật). Vui lòng thử bấm lại vào ảnh đại diện và chọn ảnh lần nữa.');
+      alert('Không tìm thấy người này trong dữ liệu hiện tại (có thể dữ liệu vừa được cập nhật). Vui lòng thử bấm lại vào ảnh đại diện và chọn ảnh lần nữa.');
     } else {
       target.photo = compressed;
       render();
       saveState({ action: 'Đổi ảnh đại diện: ' + (target.name || '(trống)') });
     }
   } catch (err) {
-    toastError('Không xử lý được ảnh: ' + err.message);
+    alert('Không xử lý được ảnh: ' + err.message);
   }
   pendingAvatarTarget = null;
   avatarFileInput.value = '';
@@ -2445,7 +2317,7 @@ document.getElementById('btn-download-image').onclick = guardEdit(async () => {
 });
 
 document.getElementById('btn-download-pdf').onclick = guardEdit(async () => {
-  if (!window.jspdf?.jsPDF) { toastError('Chưa tải được thư viện PDF. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
+  if (!window.jspdf?.jsPDF) { alert('Chưa tải được thư viện PDF. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
   const btn = document.getElementById('btn-download-pdf');
   const progress = document.getElementById('img-progress');
   btn.disabled = true;
@@ -2509,7 +2381,7 @@ function spreadsheetRow(level, person, dept = '', managerName = '') {
 }
 
 function exportExcel() {
-  if (!window.XLSX) { toastError('Chưa tải được thư viện Excel. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
+  if (!window.XLSX) { alert('Chưa tải được thư viện Excel. Hãy kiểm tra kết nối mạng rồi thử lại.'); return; }
   const rows = [];
   FLAT_TIERS_TOP.forEach((tier) => state[tier.id].forEach((person) => rows.push(spreadsheetRow(tier.title, person))));
   state.t4.forEach((manager) => {
@@ -2609,7 +2481,7 @@ document.getElementById('file-input-xlsx').onchange = (event) => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       importExcelRows(XLSX.utils.sheet_to_json(sheet, { defval: '' }));
     } catch (err) {
-      toastError('Không đọc được tệp Excel. Hãy dùng tệp được xuất từ sơ đồ này hoặc kiểm tra lại cột dữ liệu.');
+      alert('Không đọc được tệp Excel. Hãy dùng tệp được xuất từ sơ đồ này hoặc kiểm tra lại cột dữ liệu.');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -2641,23 +2513,31 @@ document.getElementById('file-input').onchange = (e) => {
       render();
       saveState({ action: 'Nhập dữ liệu từ tệp JSON' });
     } catch (err) {
-      toastError('File không hợp lệ.');
+      alert('File không hợp lệ.');
     }
   };
   reader.readAsText(file);
   e.target.value = '';
 };
 
-window.addEventListener('scroll', () => {
-  const toolbarEl = document.querySelector('.toolbar');
-  if (toolbarEl) toolbarEl.classList.toggle('is-scrolled', window.scrollY > 4);
-}, { passive: true });
-
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(drawAllConnectors, 100);
 });
+
+// Tự động mở khóa chỉnh sửa nếu mở bằng "Link chỉnh sửa" (dạng #edit=mật_khẩu)
+async function tryAutoUnlockFromLink() {
+  const match = window.location.hash.match(/(?:^#|&)edit=([^&]+)/);
+  if (!match) return;
+  const pass = decodeURIComponent(match[1]);
+  // Xóa ngay khỏi thanh địa chỉ để không lộ mật khẩu khi chụp màn hình / chia sẻ lại
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  const ok = await checkEditPassword(pass);
+  if (ok) activateEditMode('link');
+  else setStatus('Link chỉnh sửa không hợp lệ hoặc đã hết hạn.');
+}
+tryAutoUnlockFromLink();
 
 loadState();
 
@@ -2703,7 +2583,7 @@ loadState();
     script.id = 'google-translate-script';
     script.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
     script.onerror = function () {
-      toastError('Không tải được Google Dịch. Hãy kiểm tra kết nối mạng rồi thử lại.');
+      alert('Không tải được Google Dịch. Hãy kiểm tra kết nối mạng rồi thử lại.');
     };
     document.body.appendChild(script);
   }
