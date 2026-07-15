@@ -508,20 +508,21 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 /* ============================================================
    CẤU HÌNH FIREBASE — điền thông tin dự án Firebase của bạn vào đây.
-   Xem hướng dẫn lấy các giá trị này trong phần chat kèm theo file này.
 
-   MẬT KHẨU CHỈNH SỬA — kiểm tra ngay trong file này (không cần đụng
-   tới Firestore Rules mỗi khi đổi mật khẩu). Muốn đổi mật khẩu:
-     1) Vào link sơ đồ → F12 → tab Console → dán:
-        crypto.subtle.digest('SHA-256', new TextEncoder().encode("mật_khẩu_mới")).then(b=>console.log(Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')))
-     2) Copy chuỗi hash in ra, thay vào EDIT_PASSWORD_HASH bên dưới.
-     3) Sửa trực tiếp trên GitHub (nút bút chì ✏️ ở file index.html) → Commit.
-   Mật khẩu hiện tại: 0107
+   BẢO MẬT CHỈNH SỬA — dùng Firebase Authentication THẬT (không chỉ
+   kiểm tra ở giao diện nữa). Mật khẩu được Firebase kiểm tra ở phía
+   máy chủ, và Firestore Rules chỉ cho phép ghi dữ liệu nếu đăng nhập
+   đúng tài khoản này — nên không ai có thể "vượt qua" mật khẩu bằng
+   cách gọi thẳng vào Firestore API nữa.
+
+   Cách tạo/đổi mật khẩu: xem hướng dẫn trong phần chat kèm theo file này.
+   Tài khoản quản trị (email) hiện tại: xem ADMIN_EMAIL bên dưới.
    ============================================================ */
-const EDIT_PASSWORD_HASH = "0c3d5517d7fe7feafefb2e59f5e1a9820cf2163afc655a74af95ee94e7e0f5a7";
+const ADMIN_EMAIL = "quantri@nhansu-app.local";
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyAakaR1xeMoXot21XtPzmJgXis8wledE4s",
   authDomain: "an-g-17edb.firebaseapp.com",
@@ -535,12 +536,14 @@ const DOC_PATH = { collection: 'orgcharts', doc: 'main' };
 
 let firebaseReady = false;
 let db = null;
+let auth = null;
 let docRef = null;
 let historyColRef = null;
 let filesColRef = null;
 try {
   firebase.initializeApp(FIREBASE_CONFIG);
   db = firebase.firestore();
+  auth = firebase.auth();
   docRef = db.collection(DOC_PATH.collection).doc(DOC_PATH.doc);
   historyColRef = docRef.collection('history'); // lưu lịch sử ở collection con riêng, tách khỏi tài liệu chính để không vượt giới hạn 1MB khi có ảnh
   filesColRef = db.collection('nhansu_files'); // lưu tệp đính kèm hồ sơ (CCCD/hợp đồng/bằng cấp) thành từng tài liệu riêng trong Firestore, KHÔNG dùng Firebase Storage (Storage yêu cầu nâng cấp gói trả phí)
@@ -1180,8 +1183,19 @@ function guardEdit(fn) {
 
 async function checkEditPassword(pass) {
   if (!pass) return false;
-  const hash = await sha256Hex(pass);
-  return hash === EDIT_PASSWORD_HASH;
+  if (!firebaseReady || !auth) {
+    // Không có kết nối Internet/Firebase: không thể xác thực thật, nên KHÔNG cho sửa
+    // (tránh trường hợp "sửa tạm" rồi tưởng đã lưu, trong khi thực ra dữ liệu không đồng bộ được).
+    alert('Không kết nối được với máy chủ để xác thực. Hãy kiểm tra lại mạng và thử lại.');
+    return false;
+  }
+  try {
+    await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pass);
+    return true;
+  } catch (err) {
+    console.error('Đăng nhập thất bại:', err.code || err.message);
+    return false;
+  }
 }
 
 function activateEditMode(source) {
@@ -1201,6 +1215,7 @@ document.getElementById('btn-toggle-edit').onclick = async () => {
   if (editMode) {
     editMode = false;
     updateLockUI();
+    if (auth && auth.currentUser) { try { await auth.signOut(); } catch (err) {} }
     return;
   }
   const pass = prompt('Nhập mật khẩu chỉnh sửa:');
