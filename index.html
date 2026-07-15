@@ -298,6 +298,22 @@
   .file-list li button { border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px; flex-shrink: 0; }
   .file-list li button:hover { color: #a32d2d; }
   .file-list li.is-empty { color: var(--text-muted); background: none; padding: 0; }
+  .file-remove-btn { border: none; background: transparent; color: #a32d2d; cursor: pointer; font-size: 12px; padding: 0; flex-shrink: 0; }
+  .file-remove-btn:hover { text-decoration: underline; }
+  .attachment-preview { display: none; margin-top: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #f7f8fa; padding: 10px; }
+  .attachment-preview.is-visible { display: block; }
+  .attachment-preview .preview-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+  .attachment-preview .preview-name { font-size: 12px; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .attachment-preview .preview-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .attachment-preview .preview-actions a, .attachment-preview .preview-actions button {
+    font-size: 11px; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--text-secondary); text-decoration: none; cursor: pointer;
+  }
+  .attachment-preview .preview-actions a:hover, .attachment-preview .preview-actions button:hover { color: var(--brand); border-color: #b7d3ec; }
+  .attachment-preview .preview-body { max-height: 60vh; overflow: auto; text-align: center; }
+  .attachment-preview .preview-body img { max-width: 100%; border-radius: 8px; }
+  .attachment-preview .preview-body iframe { width: 100%; height: 55vh; border: none; border-radius: 8px; background: #fff; }
+  .attachment-preview .preview-loading { font-size: 12px; color: var(--text-secondary); padding: 20px 0; }
   .upload-status { font-size: 12px; color: var(--text-secondary); min-height: 16px; margin-top: 8px; }
   .settings-range-row { display: flex; align-items: center; gap: 8px; }
   .settings-range-row input[type="range"] { flex: 1; }
@@ -566,21 +582,44 @@ async function uploadPersonFile(file, personId, kind) {
   return { id: added.id, name: file.name };
 }
 
-// Mở/tải một tệp đã lưu ở Firestore (theo id tài liệu) trong tab mới.
+// Hiển thị một tệp đã lưu ở Firestore (theo id tài liệu) NGAY TRONG khung xem trước của hồ sơ,
+// không mở tab mới. Ảnh hiện trực tiếp; PDF hiện qua khung nhúng; các loại khác cho tải xuống.
 async function openPersonFile(fileId) {
   if (!fileId) return;
-  if (!firebaseReady || !filesColRef) { alert('Chưa kết nối được Firebase.'); return; }
+  const box = profileModal.querySelector('#attachment-preview');
+  if (!box) return;
+  box.classList.add('is-visible');
+  box.innerHTML = '<div class="preview-loading">Đang tải tệp...</div>';
+  if (!firebaseReady || !filesColRef) { box.innerHTML = '<div class="preview-loading">Chưa kết nối được Firebase.</div>'; return; }
   try {
     const snap = await filesColRef.doc(fileId).get();
-    if (!snap.exists) { alert('Không tìm thấy tệp này (có thể đã bị xóa).'); return; }
+    if (!snap.exists) { box.innerHTML = '<div class="preview-loading">Không tìm thấy tệp này (có thể đã bị xóa).</div>'; return; }
     const data = snap.data();
     const res = await fetch(data.dataUrl);
     const blob = await res.blob();
     const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, '_blank');
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+    const mime = data.mimeType || '';
+    let bodyHtml;
+    if (mime.startsWith('image/')) {
+      bodyHtml = '<img src="' + blobUrl + '" alt="' + (data.name || '') + '">';
+    } else if (mime === 'application/pdf') {
+      bodyHtml = '<iframe src="' + blobUrl + '"></iframe>';
+    } else {
+      bodyHtml = '<div class="preview-loading">Không xem trước được loại tệp này. Bấm "Tải xuống" để mở.</div>';
+    }
+    box.innerHTML =
+      '<div class="preview-head">' +
+        '<span class="preview-name">📎 ' + (data.name || 'Tệp đính kèm') + '</span>' +
+        '<span class="preview-actions"><a download="' + (data.name || 'tep') + '" href="' + blobUrl + '">Tải xuống</a><button type="button" class="preview-close">✕ Đóng</button></span>' +
+      '</div>' +
+      '<div class="preview-body">' + bodyHtml + '</div>';
+    box.querySelector('.preview-close').onclick = () => {
+      box.classList.remove('is-visible');
+      box.innerHTML = '';
+      URL.revokeObjectURL(blobUrl);
+    };
   } catch (err) {
-    alert('Lỗi khi mở tệp: ' + err.message);
+    box.innerHTML = '<div class="preview-loading">Lỗi khi mở tệp: ' + err.message + '</div>';
   }
 }
 
@@ -737,15 +776,16 @@ profileModal.innerHTML =
 
     '<div class="profile-section-title">Tệp đính kèm</div>' +
     '<div class="profile-field full-width"><label>CCCD (scan mặt trước/sau)</label>' +
-      '<div class="settings-upload-row"><button type="button" id="btn-upload-cccd">Tải tệp lên</button><a id="link-cccd" class="file-link" target="_blank" rel="noopener">Chưa có tệp</a></div>' +
+      '<div class="settings-upload-row"><button type="button" id="btn-upload-cccd">Tải tệp lên</button><a id="link-cccd" class="file-link" href="#">Chưa có tệp</a><button type="button" id="btn-remove-cccd" class="file-remove-btn" style="display:none;">✕ Xóa</button></div>' +
     '</div>' +
     '<div class="profile-field full-width"><label>Hợp đồng lao động (scan)</label>' +
-      '<div class="settings-upload-row"><button type="button" id="btn-upload-contract">Tải tệp lên</button><a id="link-contract" class="file-link" target="_blank" rel="noopener">Chưa có tệp</a></div>' +
+      '<div class="settings-upload-row"><button type="button" id="btn-upload-contract">Tải tệp lên</button><a id="link-contract" class="file-link" href="#">Chưa có tệp</a><button type="button" id="btn-remove-contract" class="file-remove-btn" style="display:none;">✕ Xóa</button></div>' +
     '</div>' +
     '<div class="profile-field full-width"><label>Bằng cấp / chứng chỉ (có thể thêm nhiều tệp)</label>' +
       '<div class="settings-upload-row"><button type="button" id="btn-upload-degree">+ Thêm tệp</button></div>' +
       '<ul id="degree-file-list" class="file-list"></ul>' +
     '</div>' +
+    '<div id="attachment-preview" class="attachment-preview"></div>' +
 
     '<div class="profile-field full-width"><label for="profile-note">Ghi chú</label><textarea id="profile-note" placeholder="Thông tin thêm..."></textarea></div>' +
     '<div id="profile-upload-status" class="upload-status"></div>' +
@@ -777,6 +817,16 @@ function updateFileLink(linkEl, fileId) {
     linkEl.textContent = 'Chưa có tệp';
     linkEl.onclick = null;
   }
+  const removeBtn = linkEl.parentElement.querySelector('.file-remove-btn');
+  if (removeBtn) removeBtn.style.display = (fileId && editMode) ? 'inline-block' : 'none';
+}
+
+// Xóa hẳn một tệp: gỡ tham chiếu khỏi hồ sơ và xóa luôn tài liệu tương ứng trong Firestore
+// (để không lưu mãi thông tin nhạy cảm như CCCD của người đã bị gỡ tệp).
+async function deletePersonFile(fileId) {
+  if (fileId && firebaseReady && filesColRef) {
+    try { await filesColRef.doc(fileId).delete(); } catch (err) { console.error('Không xóa được tệp trên Firestore:', err); }
+  }
 }
 
 function renderDegreeList() {
@@ -796,20 +846,44 @@ function renderDegreeList() {
     if (editMode) {
       const rm = document.createElement('button');
       rm.type = 'button'; rm.textContent = '✕ Xóa'; rm.title = 'Bỏ tệp này khỏi hồ sơ';
-      rm.onclick = () => { profileTarget.degreeFiles.splice(idx, 1); renderDegreeList(); };
+      rm.onclick = () => {
+        if (!confirm('Xóa tệp "' + (f.name || '') + '" khỏi hồ sơ?')) return;
+        deletePersonFile(f.id);
+        profileTarget.degreeFiles.splice(idx, 1);
+        renderDegreeList();
+        setProfileUploadStatus('Đã xóa tệp. Nhớ bấm "Lưu hồ sơ" để lưu lại.');
+      };
       li.appendChild(rm);
     }
     list.appendChild(li);
   });
 }
 
+profileModal.querySelector('#btn-remove-cccd').onclick = () => {
+  if (!profileTarget || !profileTarget.cccdFileId) return;
+  if (!confirm('Xóa tệp CCCD khỏi hồ sơ này?')) return;
+  deletePersonFile(profileTarget.cccdFileId);
+  profileTarget.cccdFileId = '';
+  updateFileLink(profileModal.querySelector('#link-cccd'), '');
+  setProfileUploadStatus('Đã xóa tệp CCCD. Nhớ bấm "Lưu hồ sơ" để lưu lại.');
+};
+profileModal.querySelector('#btn-remove-contract').onclick = () => {
+  if (!profileTarget || !profileTarget.contractFileId) return;
+  if (!confirm('Xóa tệp hợp đồng khỏi hồ sơ này?')) return;
+  deletePersonFile(profileTarget.contractFileId);
+  profileTarget.contractFileId = '';
+  updateFileLink(profileModal.querySelector('#link-contract'), '');
+  setProfileUploadStatus('Đã xóa tệp hợp đồng. Nhớ bấm "Lưu hồ sơ" để lưu lại.');
+};
 fileInputCccd.onchange = async (e) => {
   const file = e.target.files[0]; e.target.value = '';
   if (!file || !profileTarget) return;
   try {
     setProfileUploadStatus('Đang lưu tệp CCCD...');
+    const oldId = profileTarget.cccdFileId;
     const { id } = await uploadPersonFile(file, profileTarget.id, 'cccd');
     profileTarget.cccdFileId = id;
+    if (oldId) deletePersonFile(oldId);
     updateFileLink(profileModal.querySelector('#link-cccd'), id);
     setProfileUploadStatus('Đã lưu tệp CCCD. Nhớ bấm "Lưu hồ sơ" để lưu lại.');
   } catch (err) {
@@ -821,8 +895,10 @@ fileInputContract.onchange = async (e) => {
   if (!file || !profileTarget) return;
   try {
     setProfileUploadStatus('Đang lưu hợp đồng...');
+    const oldId = profileTarget.contractFileId;
     const { id } = await uploadPersonFile(file, profileTarget.id, 'hopdong');
     profileTarget.contractFileId = id;
+    if (oldId) deletePersonFile(oldId);
     updateFileLink(profileModal.querySelector('#link-contract'), id);
     setProfileUploadStatus('Đã lưu hợp đồng. Nhớ bấm "Lưu hồ sơ" để lưu lại.');
   } catch (err) {
@@ -849,7 +925,14 @@ profileModal.querySelector('#btn-upload-cccd').onclick = () => { if (editMode) f
 profileModal.querySelector('#btn-upload-contract').onclick = () => { if (editMode) fileInputContract.click(); };
 profileModal.querySelector('#btn-upload-degree').onclick = () => { if (editMode) fileInputDegree.click(); };
 
-function openProfile(person) {
+async function openProfile(person) {
+  if (!editMode) {
+    const pass = prompt('Sơ đồ này giới hạn xem chi tiết hồ sơ. Nhập mật khẩu để xem và chỉnh sửa:');
+    if (pass === null || pass === '') return;
+    const ok = await checkEditPassword(pass);
+    if (!ok) { alert('Sai mật khẩu.'); return; }
+    activateEditMode('profile');
+  }
   profileTarget = ensurePersonProfile(person);
   profileModal.querySelector('#profile-title').value = profileTarget.title;
   profileModal.querySelector('#profile-gender').value = profileTarget.gender || '';
@@ -867,6 +950,9 @@ function openProfile(person) {
   updateFileLink(profileModal.querySelector('#link-cccd'), profileTarget.cccdFileId);
   updateFileLink(profileModal.querySelector('#link-contract'), profileTarget.contractFileId);
   renderDegreeList();
+  const previewBox = profileModal.querySelector('#attachment-preview');
+  previewBox.classList.remove('is-visible');
+  previewBox.innerHTML = '';
   setProfileUploadStatus('');
   profileModal.querySelectorAll('input, textarea, select').forEach((field) => { field.disabled = !editMode; });
   profileModal.querySelectorAll('.settings-upload-row button').forEach((btn) => { btn.style.display = editMode ? '' : 'none'; });
