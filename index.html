@@ -229,7 +229,10 @@
   }
   #org-root.layout-vertical .group-block { min-width: max-content; }
 
-  .groups-container { display: flex; flex-direction: column; gap: 20px; padding: 6px 4px 16px; }
+  .groups-container {
+    display: grid; grid-template-columns: repeat(5, minmax(0, max-content));
+    justify-content: start; align-items: start; gap: 18px 20px; padding: 6px 4px 16px;
+  }
   .group-block {
     display: flex; flex-direction: column; gap: 12px;
     border: 1px solid var(--border); border-left: 3px solid var(--border-strong); border-radius: var(--radius-md); padding: 16px;
