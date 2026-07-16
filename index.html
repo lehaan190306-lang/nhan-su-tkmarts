@@ -90,8 +90,10 @@
   .viewport {
     overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-lg);
     background: var(--surface); max-height: 78vh; padding: 32px;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-md); cursor: grab;
   }
+  .viewport.is-panning { cursor: grabbing; }
+  .viewport.is-panning .card, .viewport.is-panning .team-row { cursor: grabbing; }
 
   .tier-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px; gap: 10px; }
   .tier-title { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; white-space: nowrap; letter-spacing: -0.005em; }
@@ -222,7 +224,8 @@
   }
   #org-root.layout-vertical .connector { width: auto; height: 50px; min-height: 50px; align-self: stretch; }
   #org-root.layout-vertical .groups-container {
-    flex-direction: row; justify-content: center; align-items: flex-start; gap: 18px; padding: 8px 4px 16px;
+    display: grid; grid-template-columns: repeat(5, minmax(0, max-content));
+    justify-content: center; align-items: start; gap: 18px; padding: 8px 4px 16px;
   }
   #org-root.layout-vertical .group-block { min-width: max-content; }
 
@@ -649,7 +652,7 @@
     .viewport { padding: 14px; border-radius: 12px; max-height: 68dvh; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
     .card.executive-card { width: 200px; }
     #org-root.layout-vertical .tier-header { flex-wrap: wrap; }
-    #org-root.layout-vertical .groups-container { justify-content: flex-start; }
+    #org-root.layout-vertical .groups-container { justify-content: flex-start; grid-template-columns: repeat(2, minmax(0, max-content)); }
 
     /* Trên điện thoại: chỉ hiện nút thiết yếu, gộp phần còn lại vào menu thả xuống "Thêm" */
     .mobile-more-toggle {
@@ -2518,6 +2521,53 @@ document.getElementById('zoom-reset').onclick = () => {
     wheelZoomTimer = setTimeout(drawAllConnectors, 120);
   }, { passive: false });
 })();
+
+// ---- Kéo bằng chuột để cuộn ngang/dọc (pan) — để người dùng chuột kéo qua trái/phải dễ dàng,
+// giống như vuốt trên điện thoại, thay vì phải dùng thanh cuộn nhỏ ở đáy khung. ----
+(function setupMousePan() {
+  const viewport = document.querySelector('.viewport');
+  if (!viewport) return;
+  // Không bắt đầu kéo-cuộn khi bấm vào các phần tử có thao tác riêng (nhập liệu, nút, kéo-thả thẻ...)
+  const skipPanSelector = 'input, textarea, select, button, a, .card, .team-row, .avatar, .avatar-sm, [draggable="true"]';
+  let isPanning = false;
+  let didPan = false;
+  let startX = 0, startY = 0, scrollStartX = 0, scrollStartY = 0;
+
+  viewport.addEventListener('mousedown', (event) => {
+    if (event.button !== 0) return; // chỉ chuột trái
+    if (event.target.closest(skipPanSelector)) return;
+    isPanning = true;
+    didPan = false;
+    viewport.classList.add('is-panning');
+    startX = event.clientX;
+    startY = event.clientY;
+    scrollStartX = viewport.scrollLeft;
+    scrollStartY = viewport.scrollTop;
+  });
+
+  window.addEventListener('mousemove', (event) => {
+    if (!isPanning) return;
+    const dx = event.clientX - startX;
+    const dy = event.clientY - startY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didPan = true;
+    viewport.scrollLeft = scrollStartX - dx;
+    viewport.scrollTop = scrollStartY - dy;
+  });
+
+  function stopPan() {
+    if (!isPanning) return;
+    isPanning = false;
+    viewport.classList.remove('is-panning');
+  }
+  window.addEventListener('mouseup', stopPan);
+  window.addEventListener('blur', stopPan);
+
+  // Chặn việc bấm bị hiểu nhầm thành "click" (mở hồ sơ, v.v.) ngay sau khi vừa kéo-cuộn.
+  viewport.addEventListener('click', (event) => {
+    if (didPan) { event.preventDefault(); event.stopPropagation(); didPan = false; }
+  }, true);
+})();
+
 
 document.getElementById('btn-toggle-layout').onclick = toggleLayoutOrientation;
 document.getElementById('btn-customize').onclick = guardEdit(openSettings);
